@@ -193,3 +193,21 @@ export interface DashboardQueryParams {
   projectId?: string;
   userId?: string;
 }
+
+// types/projects.ts
+export interface CreateProjectRequest {
+  name: string;
+  description: string;
+  budget?: number;
+  startDate?: string;
+  endDate?: string;
+  status?: ProjectStatus;
+}
+
+export interface CreateTaskRequest {
+  title: string;
+  description: string;
+  dueDate?: string;
+  projectId: string;
+  creatorId: string;
+}

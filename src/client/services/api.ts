@@ -11,6 +11,7 @@ import {
   Project,
   DashboardStats,
   TaskStatus,
+  CreateProjectRequest,
 } from "../types";
 
 const api = axios.create({
@@ -31,25 +32,6 @@ export const authAPI = {
 
   login: (data: LoginData): Promise<{ data: AuthResponse }> =>
     api.post("/auth/login", data),
-};
-
-export const tasksAPI = {
-  getTasks: (projectId?: string): Promise<{ data: Task[] }> => {
-    const url = projectId ? `/api/tasks?projectId=${projectId}` : "/tasks";
-    return api.get(url);
-  },
-
-  getMyTasks: (): Promise<{ data: Task[] }> => api.get("/tasks/my"),
-
-  createTask: (data: {
-    title: string;
-    description?: string;
-    projectId: string;
-    priority?: Priority;
-  }): Promise<{ data: Task }> => api.post("/tasks", data),
-
-  updateTask: (taskId: string, data: Partial<Task>): Promise<{ data: Task }> =>
-    api.patch(`/api/tasks/${taskId}`, data),
 };
 
 export const dashboardAPI = {
@@ -82,5 +64,17 @@ export const dashboardAPI = {
   ): Promise<{ data: TimeStats }> =>
     api.get("/dashboard/analytics/time", { params: { period } }),
 };
+
+export const tasksAPI = {
+  getAllTask: (): Promise<{ data: Task[] }> => api.get("/tasks/team"),
+  getPersonalTask: (): Promise<{ data: Task[] }> => api.get("/tasks/my"),
+  getBacklogTask: (): Promise<{ data: Task[] }> => api.get("/tasks/backlog"),
+  getDoneTask: (): Promise<{ data: Task[] }> => api.get("/tasks/done"),
+};
+
+export const ProjectAPI = {
+  getProject: (): Promise<{data: Project[]}> => api.get("/project"),
+  createProject:(data: CreateProjectRequest) : Promise<{data: Project}> => api.post('/projects', data)
+}
 
 export default api;

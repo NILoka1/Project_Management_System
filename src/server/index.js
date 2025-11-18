@@ -15,6 +15,7 @@ require("dotenv").config();
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const authMiddleware = require("./middleware/auth");
+const { error } = require("console");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -134,142 +135,6 @@ app.post("/api/auth/login", async (req, res) => {
   } catch (error) {
     console.error("Login error:", error);
     res.status(500).json({ error: "Internal server error" });
-  }
-});
-// Получить все задачи (с фильтрацией по проекту)
-// Получить все задачи (с фильтрацией по проекту)
-app.get("/api/tasks", authMiddleware, async (req, res) => {
-  try {
-    const userId = req.user.userId;
-    const { projectId } = req.query;
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-
-    let whereCondition = {};
-
-    if (user.role === "MANAGER") {
-      // Менеджер видит все задачи
-      whereCondition = {};
-    } else if (user.role === "TEAM_LEAD") {
-      // Тимлид видит задачи своей команды
-      whereCondition = {
-        project: {
-          teams: {
-            some: {
-              team: {
-                members: {
-                  some: {
-                    userId: userId,
-                    role: "LEADER",
-                  },
-                },
-              },
-            },
-          },
-        },
-      };
-    } else {
-      // DEVELOPER/TESTER: видит задачи команды + свои задачи
-      whereCondition = {
-        OR: [
-          { assigneeId: userId }, // Я исполнитель
-          { creatorId: userId }, // Я создатель
-          {
-            project: {
-              teams: {
-                some: {
-                  team: {
-                    members: {
-                      some: { userId: userId }, // Задачи проектов моей команды
-                    },
-                  },
-                },
-              },
-            },
-          },
-        ],
-      };
-    }
-
-    // Добавляем фильтрацию по projectId если есть
-    if (projectId) {
-      whereCondition.projectId = projectId;
-    }
-
-    const tasks = await prisma.task.findMany({
-      where: whereCondition,
-      include: {
-        project: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        assignee: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-        creator: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-        _count: {
-          select: {
-            timeEntries: true,
-          },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-    });
-
-    res.json(tasks);
-  } catch (error) {
-    console.error("Error fetching tasks:", error);
-    res.status(500).json({ error: "Failed to fetch tasks" });
-  }
-});
-
-// Получить задачи текущего пользователя
-app.get("/api/tasks/my", authMiddleware, async (req, res) => {
-  try {
-    const userId = req.user.userId;
-
-    const tasks = await prisma.task.findMany({
-      where: {
-        OR: [{ assigneeId: userId }, { creatorId: userId }],
-      },
-      include: {
-        project: {
-          select: {
-            id: true,
-            name: true,
-          },
-        },
-        assignee: {
-          select: {
-            id: true,
-            name: true,
-            email: true,
-          },
-        },
-        _count: {
-          select: {
-            timeEntries: true,
-          },
-        },
-      },
-      orderBy: { createdAt: "desc" },
-    });
-
-    res.json(tasks);
-  } catch (error) {
-    console.error("Error fetching user tasks:", error);
-    res.status(500).json({ error: "Failed to fetch tasks" });
   }
 });
 
@@ -675,6 +540,301 @@ app.get("/api/dashboard/analytics/time", authMiddleware, async (req, res) => {
   } catch (error) {
     console.error("Time stats error:", error);
     res.status(500).json({ error: "Failed to fetch time statistics" });
+  }
+});
+
+app.get("/api/tasks/team", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+
+    let tasks;
+
+    if (user.role === "MANAGER") {
+      tasks = await prisma.task.findMany({
+        where: {
+          status: {
+            notIn: ["BACKLOG", "DONE"],
+          },
+        },
+        orderBy: [{ status: "asc" }, { dueDate: "asc" }, { priority: "desc" }],
+      });
+    } else if (user.role === "TEAM_LEAD") {
+      tasks = await prisma.task.findMany({
+        where: {
+          status: {
+            notIn: ["BACKLOG", "DONE"],
+          },
+          project: {
+            teams: {
+              some: {
+                team: {
+                  members: {
+                    some: {
+                      userId: userId,
+                      role: "LEADER",
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        orderBy: [{ status: "asc" }, { dueDate: "asc" }, { priority: "desc" }],
+      });
+    } else {
+      tasks = await prisma.task.findMany({
+        where: {
+          status: {
+            notIn: ["BACKLOG", "DONE"],
+          },
+          project: {
+            teams: {
+              some: {
+                team: {
+                  members: {
+                    some: {
+                      userId: userId,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        orderBy: [{ status: "asc" }, { priority: "desc" }, { dueDate: "asc" }],
+      });
+    }
+    res.json(tasks);
+  } catch (error) {
+    console.error("Team tasks error:", error);
+    res.status(500).json({ error: "Failed to fetch team tasks" });
+  }
+});
+
+app.get("/api/tasks/my", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+
+    let tasks;
+
+    if (user.role === "TEAM_LEAD") {
+      tasks = await prisma.task.findMany({
+        where: {
+          status: "REVIEW",
+          project: {
+            teams: {
+              some: {
+                team: {
+                  members: {
+                    some: {
+                      userId: userId,
+                      role: "LEADER",
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        orderBy: [{ status: "asc" }, { dueDate: "asc" }, { priority: "desc" }],
+      });
+    } else {
+      tasks = await prisma.task.findMany({
+        where: {
+          assigneeId: userId,
+          status: { in: ["IN_PROGRESS", "TESTING"] },
+        },
+        orderBy: [{ status: "asc" }, { dueDate: "asc" }, { priority: "desc" }],
+      });
+    }
+
+    res.json(tasks);
+  } catch (error) {
+    console.error("Personal tasks error:", error);
+    res.status(500).json({ error: "Failed to fetch personal tasks" });
+  }
+});
+
+app.get("/api/tasks/backlog", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+
+    let tasks;
+    if (user.role === "MANAGER") {
+      tasks = await prisma.task.findMany({
+        where: {
+          status: "BACKLOG",
+        },
+        orderBy: [{ status: "asc" }, { dueDate: "asc" }, { priority: "desc" }],
+      });
+    } else if (user.role === "TEAM_LEAD") {
+      tasks = await prisma.task.findMany({
+        where: {
+          status: "BACKLOG",
+          project: {
+            teams: {
+              some: {
+                team: {
+                  members: {
+                    some: {
+                      userId: userId,
+                      role: "LEADER",
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        orderBy: [{ status: "asc" }, { dueDate: "asc" }, { priority: "desc" }],
+      });
+    } else {
+      tasks = await prisma.task.findMany({
+        where: {
+          status: "BACKLOG",
+          project: {
+            teams: {
+              some: {
+                team: {
+                  members: {
+                    some: {
+                      userId: userId,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        orderBy: [{ status: "asc" }, { priority: "desc" }, { dueDate: "asc" }],
+      });
+    }
+    res.json(tasks);
+  } catch (error) {
+    console.error("Personal tasks error:", error);
+    res.status(500).json({ error: "Failed to fetch personal tasks" });
+  }
+});
+
+app.get("/api/tasks/done", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+
+    let tasks;
+    if (user.role === "MANAGER") {
+      tasks = await prisma.task.findMany({
+        where: {
+          status: "DONE",
+        },
+        orderBy: [{ status: "asc" }, { dueDate: "asc" }, { priority: "desc" }],
+      });
+    } else if (user.role === "TEAM_LEAD") {
+      tasks = await prisma.task.findMany({
+        where: {
+          status: "DONE",
+          project: {
+            teams: {
+              some: {
+                team: {
+                  members: {
+                    some: {
+                      userId: userId,
+                      role: "LEADER",
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        orderBy: [{ status: "asc" }, { dueDate: "asc" }, { priority: "desc" }],
+      });
+    } else {
+      tasks = await prisma.task.findMany({
+        where: {
+          status: "DONE",
+          project: {
+            teams: {
+              some: {
+                team: {
+                  members: {
+                    some: {
+                      userId: userId,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        orderBy: [{ status: "asc" }, { priority: "desc" }, { dueDate: "asc" }],
+      });
+    }
+    res.json(tasks);
+  } catch (error) {
+    console.error("Personal tasks error:", error);
+    res.status(500).json({ error: "Failed to fetch personal tasks" });
+  }
+});
+
+app.get("/api/project", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+
+    let project;
+
+    if (user.role === "MANAGER") {
+      project = await prisma.project.findMany({});
+    } else {
+      project = await prisma.project.findMany({
+        where: {
+          teams: {
+            some: {
+              team: {
+                members: {
+                  some: {
+                    userId: userId,
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+    }
+
+    res.json(project);
+  } catch (error) {
+    console.error("Personal tasks error:", error);
+    res.status(500).json({ error: "Failed to fetch personal tasks" });
+  }
+});
+
+app.post("/api/projects", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { name, description, budget, startDate, endDate, status } = req.body;
+
+    const project = await prisma.project.create({
+      data: {
+        name: name.trim(),
+        description: description.trim(),
+        budget: budget ? parseFloat(budget) : null,
+        startDate: startDate ? new Date(startDate) : null,
+        endDate: endDate ? new Date(endDate) : null,
+        status: status || "PLANNING",
+        // progress автоматически 0 по умолчанию
+      },
+    });
+    res.status(201).json(project);
+  } catch (error) {
+    console.error("Personal tasks error:", error);
+    res.status(500).json({ error: "Failed to fetch personal tasks" });
   }
 });
 

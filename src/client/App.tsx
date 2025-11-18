@@ -9,9 +9,9 @@ import { ProtectedRoute } from "./components/ProtectedRoute";
 import { LoginPage } from "./pages/LoginPage";
 import { DashboardPage } from "./pages/dashboard/DashboardPage";
 import { ProfilePage } from "./pages/ProfilePage";
-import { ProjectList } from "./components/ProjectList";
+import { ProjectList } from "./pages/ProjectPage";
 import { HomePage } from "./pages/HomePage";
-import { TasksPage } from "./pages/TasksPage";
+import { TasksPage } from "./pages/Tasks/TasksPage";
 
 export default function App() {
   return (

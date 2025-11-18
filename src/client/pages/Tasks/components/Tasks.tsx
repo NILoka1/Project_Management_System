@@ -1,54 +1,55 @@
 import { useEffect, useState } from "react";
+import { Role, Task } from "../../../types";
+import { tasksAPI } from "../../../services/api";
 import {
-  Paper,
-  Title,
-  Stack,
-  Group,
-  Badge,
-  Text,
-  Button,
   ActionIcon,
+  Badge,
+  Flex,
+  Group,
+  Paper,
+  Stack,
+  Text,
 } from "@mantine/core";
-import { IconPlayerPlay, IconEdit, IconClock } from "@tabler/icons-react";
-import { dashboardAPI } from "../../../services/api";
-import { Task, Role } from "../../../types";
+import { IconClock, IconEdit, IconPlayerPlay } from "@tabler/icons-react";
 import { getStatusColor, getPriorityColor } from "../../../func/colors";
+import { NewTask } from "../../../components/modal/newTask";
 
-interface TasksProps {
-  role: Role;
-}
-
-export function Tasks({ role }: TasksProps) {
-  const [tasks, setTasks] = useState<Task[]>([]);
+const Tasks = ({ role, solo }: { role: Role; solo: boolean }) => {
+  const [tasks, setTasks] = useState<Task[]>();
 
   useEffect(() => {
-    fetchTasks();
+    const fetchData = async () => {
+      try {
+        let response;
+        if (solo) {
+          response = await tasksAPI.getPersonalTask();
+        } else {
+          response = await tasksAPI.getAllTask();
+        }
+
+        setTasks(response.data);
+      } catch (error) {
+        console.error("Error fetching tasks:", error);
+      }
+    };
+
+    fetchData();
   }, []);
-
-  const fetchTasks = async () => {
-    try {
-      const response = await dashboardAPI.getUserTasks();
-      setTasks(response.data);
-    } catch (error) {
-      console.error("Error fetching tasks:", error);
-    }
-  };
-
-  const activeTasks = tasks
-    .filter((task) => task.status === "IN_PROGRESS" || task.status === "TODO")
-    .slice(0, 5); // Показываем только 5 активных задач
+  if (!tasks) {
+    return <div>Загрузка...</div>;
+  }
+  if (tasks.length === 0) {
+    return <Text>Нет задач</Text>;
+  }
 
   return (
-    <Paper p="md" withBorder>
-      <Group justify="space-between" mb="md">
-        <Title order={3}>Мои активные задачи</Title>
-        <Button variant="light" size="xs">
-          Все задачи
-        </Button>
-      </Group>
+    <>
+      <Flex m={"md"}>
+        {(!solo || role === "MANAGER" || role === "TEAM_LEAD") && <NewTask />}
+      </Flex>
 
-      <Stack gap="sm">
-        {activeTasks.map((task) => (
+      {tasks.map((task) => {
+        return (
           <Paper key={task.id} p="sm" withBorder>
             <Group justify="space-between">
               <Stack gap={4} style={{ flex: 1 }}>
@@ -98,14 +99,10 @@ export function Tasks({ role }: TasksProps) {
               </Group>
             </Group>
           </Paper>
-        ))}
-
-        {activeTasks.length === 0 && (
-          <Text c="dimmed" ta="center" py="md">
-            Нет активных задач
-          </Text>
-        )}
-      </Stack>
-    </Paper>
+        );
+      })}
+    </>
   );
-}
+};
+
+export default Tasks;
