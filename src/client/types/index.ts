@@ -84,9 +84,10 @@ export interface TimeEntry {
   taskId: string;
   userId: string;
   startTime: string;
-  endTime: string | null;
-  duration: number | null;
+  endTime: string;
+  duration: number;
   createdAt: string;
+  updatedAt: string;
 }
 
 // Team types
@@ -95,6 +96,31 @@ export interface Team {
   name: string;
   description: string | null;
   createdAt: string;
+}
+
+export interface FullTeam {
+  id: string;
+  name: string;
+  description: string | null;
+  members: User[];
+  projects: Project[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface FullProjects {
+  id: string;
+  name: string;
+  description: string | null;
+  status: string;
+  progress: number;
+  budget: number | null;
+  startDate: string | null;
+  endDate: string | null;
+  teams: Team[];
+  tasks: Task[];
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface TeamUser {
@@ -209,5 +235,9 @@ export interface CreateTaskRequest {
   description: string;
   dueDate?: string;
   projectId: string;
-  creatorId: string;
+}
+
+export interface CreateTeamReq {
+  name: string;
+  description: string;
 }

@@ -19,6 +19,6 @@
     "ignoreDeprecations": "6.0",
     "types": ["vite/client"]
   },
-  "include": ["src"],
+  "include": ["src", "src/client/store/timerStore.ts"],
   "references": [{ "path": "./tsconfig.node.json" }]
 }

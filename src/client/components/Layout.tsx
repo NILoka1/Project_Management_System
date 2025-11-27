@@ -2,6 +2,7 @@ import React from "react";
 import { AppShell, Group, Text, Button, NavLink, Stack } from "@mantine/core";
 import { useAuthStore } from "../store/authStore";
 import { useNavigate, useLocation } from "react-router-dom";
+import { Timers } from "../components/Timers";
 
 interface LayoutProps {
   children: React.ReactNode;
@@ -25,15 +26,23 @@ export function Layout({ children }: LayoutProps) {
     { label: "Профиль", path: "/profile", protected: true },
   ];
 
+  if (user?.role === "MANAGER") {
+    navItems.push({ label: "Команды", path: "/teams", protected: true });
+    navItems.push({ label: "Пользователи", path: "/users", protected: true });
+  }
+
+  const showTimers =
+    isAuthenticated && (user?.role === "DEVELOPER" || user?.role === "TESTER");
+
   return (
     <AppShell
       padding="md"
       navbar={{
-        width: 300,
+        width: 200,
         breakpoint: "sm",
         collapsed: { mobile: !isAuthenticated },
       }}
-      header={{ height: 60 }}
+      header={{ height: 100 }}
     >
       {/* Навигация */}
       <AppShell.Navbar p="md">
@@ -65,7 +74,11 @@ export function Layout({ children }: LayoutProps) {
           <Text size="xl" fw={700}>
             IT Project Tracker
           </Text>
-          {isAuthenticated && <Text>Добро пожаловать, {user?.name}</Text>}
+
+          <Group>
+            {showTimers && <Timers />}
+            {isAuthenticated && <Text>Добро пожаловать, {user?.name}</Text>}
+          </Group>
         </Group>
       </AppShell.Header>
 

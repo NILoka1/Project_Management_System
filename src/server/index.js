@@ -815,6 +815,222 @@ app.get("/api/project", authMiddleware, async (req, res) => {
   }
 });
 
+app.get("/api/teams", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+
+    const teams = await prisma.team.findMany({
+      select: {
+        id: true,
+        name: true,
+        description: true,
+        createdAt: true,
+      },
+    });
+    res.json(teams);
+  } catch (error) {
+    console.error("Personal tasks error:", error);
+    res.status(500).json({ error: "Failed to fetch personal tasks" });
+  }
+});
+app.get("/api/teams/:teamId", authMiddleware, async (req, res) => {
+  try {
+    const teamId = req.params.teamId;
+
+    const team = await prisma.team.findUnique({
+      where: {
+        id: teamId,
+      },
+      include: {
+        members: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                email: true,
+                name: true,
+                role: true,
+                avatar: true,
+                createdAt: true,
+              },
+            },
+          },
+        },
+        projects: {
+          include: {
+            project: {
+              select: {
+                id: true,
+                name: true,
+                description: true,
+                status: true,
+                progress: true,
+                budget: true,
+                startDate: true,
+                endDate: true,
+                createdAt: true,
+                updatedAt: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!team) {
+      return res.status(404).json({ error: "Team not found" });
+    }
+
+    const fullTeam = {
+      ...team,
+      members: team.members.map((member) => member.user),
+      projects: team.projects.map((pt) => pt.project),
+    };
+
+    res.json(fullTeam);
+  } catch (error) {
+    console.error("Get team error:", error);
+    res.status(500).json({ error: "Failed to fetch team" });
+  }
+});
+
+app.get("/api/users", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+
+    if (user.role != "MANAGER") {
+      res.json({ error: "Недостаточно прав" });
+      return;
+    }
+
+    const users = await prisma.user.findMany({
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+      },
+    });
+    res.json(users);
+  } catch (error) {
+    console.error("Personal tasks error:", error);
+    res.status(500).json({ error: "Failed to fetch personal tasks" });
+  }
+});
+
+// GET /api/projects/:projectId
+app.get("/api/projects/:projectId", authMiddleware, async (req, res) => {
+  try {
+    const projectId = req.params.projectId;
+
+    const project = await prisma.project.findUnique({
+      where: {
+        id: projectId,
+      },
+      include: {
+        tasks: {
+          include: {
+            assignee: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+                role: true,
+              },
+            },
+            creator: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+            timeEntries: true,
+          },
+        },
+        teams: {
+          include: {
+            team: {
+              include: {
+                members: {
+                  include: {
+                    user: {
+                      select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        role: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!project) {
+      return res.status(404).json({ error: "Project not found" });
+    }
+
+    const fullProject = {
+      ...project,
+      teams: project.teams.map((pt) => pt.team),
+    };
+
+    res.json(fullProject);
+  } catch (error) {
+    console.error("Get project error:", error);
+    res.status(500).json({ error: "Failed to fetch project" });
+  }
+});
+
+// POST /api/teams/:teamId/members
+app.post("/api/teams/:teamId/members", authMiddleware, async (req, res) => {
+  try {
+    const teamId = req.params.teamId;
+    const { userIds } = req.body;
+
+    // Создаем связи между пользователями и командой
+    const teamUsers = await prisma.teamUser.createMany({
+      data: userIds.map((userId) => ({
+        userId,
+        teamId,
+        role: "MEMBER",
+      })),
+    });
+
+    // Получаем обновленных участников
+    const members = await prisma.teamUser.findMany({
+      where: { teamId },
+      include: {
+        user: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            role: true,
+            avatar: true,
+          },
+        },
+      },
+    });
+
+    res.status(201).json({
+      message: "Участники успешно добавлены",
+      members: members.map((member) => member.user),
+      addedCount: teamUsers.count,
+    });
+  } catch (error) {
+    console.error("Add members error:", error);
+    res.status(500).json({ error: "Не удалось добавить участников" });
+  }
+});
+
 app.post("/api/projects", authMiddleware, async (req, res) => {
   try {
     const userId = req.user.userId;
@@ -837,7 +1053,312 @@ app.post("/api/projects", authMiddleware, async (req, res) => {
     res.status(500).json({ error: "Failed to fetch personal tasks" });
   }
 });
+app.post("/api/tasks", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { title, description, dueDate, projectId, taskStatus, priority } =
+      req.body;
 
+    const task = await prisma.task.create({
+      data: {
+        title: title.trim(),
+        description: description?.trim(), // опционально
+        dueDate: dueDate ? new Date(dueDate) : null, // конвертируем в Date
+        projectId: projectId,
+        creatorId: userId, // на всякий случай
+        priority: priority || "MEDIUM", // значение по умолчанию
+        status: taskStatus || "BACKLOG", // значение по умолчанию
+        assigneeId: null, // или из req.body если есть
+      },
+    });
+    res.status(201).json(task);
+  } catch (error) {
+    console.error("Personal tasks error:", error);
+    res.status(500).json({ error: "Failed to fetch personal tasks" });
+  }
+});
+
+app.post("/api/teams", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { name, description } = req.body;
+
+    team = await prisma.team.create({
+      data: {
+        name: name,
+        description: description,
+      },
+    });
+
+    res.status(201).json(team);
+  } catch (error) {
+    console.error("Personal team error:", error);
+    res.status(500).json({ error: "Failed to fetch team" });
+  }
+});
+
+// POST /api/teams/:teamId/projects
+app.post("/api/teams/:teamId/projects", authMiddleware, async (req, res) => {
+  try {
+    const teamId = req.params.teamId;
+    const { projectIds } = req.body;
+
+    // Создаем связи между проектами и командой
+    const projectTeams = await prisma.projectTeam.createMany({
+      data: projectIds.map((projectId) => ({
+        projectId,
+        teamId,
+      })),
+    });
+
+    // Получаем обновленные проекты
+    const projects = await prisma.projectTeam.findMany({
+      where: { teamId },
+      include: {
+        project: {
+          select: {
+            id: true,
+            name: true,
+            description: true,
+            status: true,
+            progress: true,
+            budget: true,
+            startDate: true,
+            endDate: true,
+            createdAt: true,
+            updatedAt: true,
+          },
+        },
+      },
+    });
+
+    res.status(201).json({
+      message: "Проекты успешно добавлены",
+      projects: projects.map((pt) => pt.project),
+      addedCount: projectTeams.count,
+    });
+  } catch (error) {
+    console.error("Add projects error:", error);
+    res.status(500).json({ error: "Не удалось добавить проекты" });
+  }
+});
+
+// Бэкенд эндпоинт
+app.post("/api/time-entries", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const { taskId, startTime, endTime, duration } = req.body;
+
+    const timeEntry = await prisma.timeEntry.create({
+      data: {
+        taskId,
+        userId,
+        startTime: new Date(startTime),
+        endTime: new Date(endTime),
+        duration: parseInt(duration),
+      },
+    });
+
+    res.status(201).json(timeEntry);
+  } catch (error) {
+    console.error("Create time entry error:", error);
+    res.status(500).json({ error: "Failed to create time entry" });
+  }
+});
+
+app.patch("/api/users/update", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const user = await prisma.user.findUnique({ where: { id: userId } });
+    const { id, role } = req.body;
+
+    if (user.role != "MANAGER") {
+      res.json({ error: "Недостаточно прав" });
+      return;
+    }
+
+    const updatedUser = await prisma.user.update({
+      where: { id: id },
+      data: { role: role },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+        createdAt: true,
+      },
+    });
+
+    res.status(200).json(updatedUser);
+  } catch (error) {
+    console.error("Personal team error:", error);
+    res.status(500).json({ error: "Failed to fetch team" });
+  }
+});
+
+app.patch("/api/teams/:teamId", authMiddleware, async (req, res) => {
+  try {
+    const teamId = req.params.teamId;
+    const { name, description } = req.body;
+
+    const updatedTeam = await prisma.team.update({
+      where: { id: teamId },
+      data: { name, description },
+      include: {
+        members: {
+          include: {
+            user: {
+              select: {
+                id: true,
+                email: true,
+                name: true,
+                role: true,
+                avatar: true,
+                createdAt: true,
+              },
+            },
+          },
+        },
+        projects: {
+          include: {
+            project: {
+              select: {
+                id: true,
+                name: true,
+                description: true,
+                status: true,
+                progress: true,
+                budget: true,
+                startDate: true,
+                endDate: true,
+                createdAt: true,
+                updatedAt: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    // Преобразуем как в GET эндпоинте
+    const fullTeam = {
+      ...updatedTeam,
+      members: updatedTeam.members.map((member) => member.user),
+      projects: updatedTeam.projects.map((pt) => pt.project),
+    };
+
+    res.json(fullTeam);
+  } catch (error) {
+    console.error("Update team error:", error);
+    res.status(500).json({ error: "Failed to update team" });
+  }
+});
+
+// PATCH /api/projects/:projectId
+app.patch("/api/projects/:projectId", authMiddleware, async (req, res) => {
+  try {
+    const userId = req.user.userId;
+    const projectId = req.params.projectId;
+    const {
+      name,
+      description,
+      status,
+      progress,
+      budget,
+      startDate,
+      endDate,
+      teamIds,
+    } = req.body;
+
+    // Проверяем права
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { role: true },
+    });
+
+    if (user?.role !== "MANAGER" && user?.role !== "TEAM_LEAD") {
+      return res
+        .status(403)
+        .json({ error: "Недостаточно прав для обновления проекта" });
+    }
+
+    const updateData = {};
+    if (name !== undefined) updateData.name = name;
+    if (description !== undefined) updateData.description = description;
+    if (status !== undefined) updateData.status = status;
+    if (progress !== undefined) updateData.progress = progress;
+    if (budget !== undefined) updateData.budget = budget;
+    if (startDate !== undefined)
+      updateData.startDate = startDate ? new Date(startDate) : null;
+    if (endDate !== undefined)
+      updateData.endDate = endDate ? new Date(endDate) : null;
+
+    // Если переданы teamIds, обновляем связи с командами
+    if (teamIds !== undefined) {
+      // Удаляем старые связи
+      await prisma.projectTeam.deleteMany({
+        where: { projectId },
+      });
+
+      // Создаем новые связи
+      if (teamIds.length > 0) {
+        updateData.teams = {
+          create: teamIds.map((teamId) => ({
+            team: { connect: { id: teamId } },
+          })),
+        };
+      }
+    }
+
+    const updatedProject = await prisma.project.update({
+      where: { id: projectId },
+      data: updateData,
+      include: {
+        teams: {
+          include: {
+            team: {
+              include: {
+                members: {
+                  include: {
+                    user: {
+                      select: {
+                        id: true,
+                        name: true,
+                        email: true,
+                        role: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+        tasks: {
+          include: {
+            assignee: {
+              select: {
+                id: true,
+                name: true,
+                email: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    const fullProject = {
+      ...updatedProject,
+      teams: updatedProject.teams.map((pt) => pt.team),
+    };
+
+    res.json(fullProject);
+  } catch (error) {
+    console.error("Update project error:", error);
+    res.status(500).json({ error: "Failed to update project" });
+  }
+});
 app.listen(PORT, () => {
   console.log(`🚀 Server running on port ${PORT}`);
 });

@@ -7,21 +7,24 @@ import {
   Stack,
   Container,
   Title,
+  Button,
 } from "@mantine/core";
 import { Project } from "../types";
 import { ProjectAPI } from "../services/api";
 import { useAuthStore } from "../store/authStore";
 import { NewProject } from "../components/modal/newProject";
+import { useNavigate } from "react-router-dom";
 
 export function ProjectList() {
   const [projects, setProjects] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const { user } = useAuthStore();
   const role = user?.role;
+  const navigate = useNavigate();
 
   useEffect(() => {
     const getData = async () => {
-      setProjects((await ProjectAPI.getProject()).data);
+      setProjects((await ProjectAPI.getProjects()).data);
       setLoading(false);
     };
     getData();
@@ -49,17 +52,29 @@ export function ProjectList() {
         {projects.map((project) => (
           <Card key={project.id} shadow="sm" padding="lg" withBorder>
             <Group justify="space-between" mb="xs">
-              <Text fw={500}>{project.name}</Text>
+              <Button
+                onClick={() => {
+                  navigate(`/project/${project.id}`);
+                }}
+                variant="light"
+                ta={"left"}
+                color="rgba(0, 0, 0, 1)"
+              >
+                {" "}
+                <Text size="md" >
+                  {project.name}
+                </Text>
+              </Button>
               <Text size="sm" c="dimmed">
                 {project.status}
               </Text>
             </Group>
 
-            <Text size="sm" c="dimmed" mb="md">
+            <Text ml={"lg"} size="sm" c="dimmed" mb="md">
               {project.description}
             </Text>
 
-            <Progress value={project.progress} size="lg" />
+            <Progress ml={"lg"} value={project.progress} size="lg" />
             <Text size="sm" ta="center" mt="xs">
               {project.progress}% завершено
             </Text>

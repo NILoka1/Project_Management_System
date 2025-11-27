@@ -49,7 +49,6 @@ export const NewProject = ({
     setLoading(true);
     try {
       const res = (await ProjectAPI.createProject(values)).data;
-      console.log(res)
       setProjects([...project, res])
       form.reset();
       close();

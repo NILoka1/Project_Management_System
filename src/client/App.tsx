@@ -12,6 +12,10 @@ import { ProfilePage } from "./pages/ProfilePage";
 import { ProjectList } from "./pages/ProjectPage";
 import { HomePage } from "./pages/HomePage";
 import { TasksPage } from "./pages/Tasks/TasksPage";
+import { TeamList } from "./pages/teamsPage";
+import { Users } from "./pages/UsersPage";
+import { FullProject } from "./pages/FullProject";
+import { FullOneTeam } from "./pages/FullTeam";
 
 export default function App() {
   return (
@@ -40,6 +44,16 @@ export default function App() {
               </ProtectedRoute>
             }
           />
+
+          <Route
+            path="/project/:projectId"
+            element={
+              <ProtectedRoute>
+                <FullProject />
+              </ProtectedRoute>
+            }
+          />
+
           <Route
             path="/tasks"
             element={
@@ -54,6 +68,32 @@ export default function App() {
             element={
               <ProtectedRoute>
                 <ProfilePage />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/teams"
+            element={
+              <ProtectedRoute>
+                <TeamList />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/team/:teamId"
+            element={
+              <ProtectedRoute>
+                <FullOneTeam />
+              </ProtectedRoute>
+            }
+          />
+
+          <Route
+            path="/users"
+            element={
+              <ProtectedRoute>
+                <Users />
               </ProtectedRoute>
             }
           />

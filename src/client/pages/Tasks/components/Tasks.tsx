@@ -10,9 +10,10 @@ import {
   Stack,
   Text,
 } from "@mantine/core";
-import { IconClock, IconEdit, IconPlayerPlay } from "@tabler/icons-react";
+import { IconClock, IconEdit } from "@tabler/icons-react";
 import { getStatusColor, getPriorityColor } from "../../../func/colors";
 import { NewTask } from "../../../components/modal/newTask";
+import { TaskTimer } from "../../../components/TaskTimer";
 
 const Tasks = ({ role, solo }: { role: Role; solo: boolean }) => {
   const [tasks, setTasks] = useState<Task[]>();
@@ -45,7 +46,7 @@ const Tasks = ({ role, solo }: { role: Role; solo: boolean }) => {
   return (
     <>
       <Flex m={"md"}>
-        {(!solo || role === "MANAGER" || role === "TEAM_LEAD") && <NewTask />}
+        {((!solo && role === "MANAGER") || role === "TEAM_LEAD") && <NewTask />}
       </Flex>
 
       {tasks.map((task) => {
@@ -80,13 +81,7 @@ const Tasks = ({ role, solo }: { role: Role; solo: boolean }) => {
 
               <Group gap="xs">
                 {role === "DEVELOPER" || role === "TESTER" ? (
-                  <ActionIcon
-                    variant="light"
-                    color="blue"
-                    title="Запустить таймер"
-                  >
-                    <IconPlayerPlay size={16} />
-                  </ActionIcon>
+                  <TaskTimer taskId={task.id} taskTitle={task.title} />
                 ) : (
                   <ActionIcon
                     variant="outline"
