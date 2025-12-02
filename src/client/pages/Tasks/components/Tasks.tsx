@@ -1,9 +1,10 @@
 import { useEffect, useState } from "react";
-import { Role, Task } from "../../../types";
+import { Role, Task, TaskStatus } from "../../../types";
 import { tasksAPI } from "../../../services/api";
 import {
   ActionIcon,
   Badge,
+  Button,
   Flex,
   Group,
   Paper,
@@ -14,9 +15,12 @@ import { IconClock, IconEdit } from "@tabler/icons-react";
 import { getStatusColor, getPriorityColor } from "../../../func/colors";
 import { NewTask } from "../../../components/modal/newTask";
 import { TaskTimer } from "../../../components/TaskTimer";
+import { useAuthStore } from "../../../store/authStore";
 
 const Tasks = ({ role, solo }: { role: Role; solo: boolean }) => {
   const [tasks, setTasks] = useState<Task[]>();
+
+  const { user } = useAuthStore();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -42,6 +46,15 @@ const Tasks = ({ role, solo }: { role: Role; solo: boolean }) => {
   if (tasks.length === 0) {
     return <Text>Нет задач</Text>;
   }
+
+  const handleStatusChange = async (newStatus: TaskStatus, taskId: string) => {
+    await tasksAPI.updateTaskStatus(taskId, newStatus);
+    setTasks(
+      tasks.filter((task) => {
+        return task.id != taskId;
+      })
+    );
+  };
 
   return (
     <>
@@ -91,6 +104,72 @@ const Tasks = ({ role, solo }: { role: Role; solo: boolean }) => {
                     <IconEdit size={16}></IconEdit>
                   </ActionIcon>
                 )}
+                {task.status === "TODO" && task.assigneeId === user?.id && (
+                  <Button
+                    size="xs"
+                    color="blue"
+                    onClick={() => handleStatusChange("IN_PROGRESS", task.id)}
+                  >
+                    Взять в работу
+                  </Button>
+                )}
+
+                {task.status === "IN_PROGRESS" &&
+                  task.assigneeId === user?.id && (
+                    <Button
+                      size="xs"
+                      color="grape"
+                      onClick={() => handleStatusChange("REVIEW", task.id)}
+                    >
+                      Отправить на ревью
+                    </Button>
+                  )}
+
+                {(task.status === "REVIEW" || task.status === "TESTING") &&
+                  (user?.role === "TEAM_LEAD" ||
+                    user?.role === "TESTER" ||
+                    user?.role === "MANAGER") && (
+                    <Group>
+                      {task.status === "REVIEW" && (
+                        <Button
+                          size="xs"
+                          color="teal"
+                          onClick={() => handleStatusChange("TESTING", task.id)}
+                        >
+                          Принять на тестирование
+                        </Button>
+                      )}
+                      {task.status === "TESTING" && (
+                        <>
+                          <Button
+                            size="xs"
+                            color="green"
+                            onClick={() => handleStatusChange("DONE", task.id)}
+                          >
+                            Завершить
+                          </Button>
+                          <Button
+                            size="xs"
+                            color="orange"
+                            onClick={() =>
+                              handleStatusChange("REVIEW", task.id)
+                            }
+                          >
+                            Вернуть на ревью
+                          </Button>
+                        </>
+                      )}
+                      <Button
+                        size="xs"
+                        color="red"
+                        onClick={() =>
+                          handleStatusChange("IN_PROGRESS", task.id)
+                        }
+                      >
+                        Вернуть на доработку
+                      </Button>
+                    </Group>
+                  )}
               </Group>
             </Group>
           </Paper>

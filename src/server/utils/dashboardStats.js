@@ -1,41 +1,104 @@
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
+// Helper для начала текущей недели (понедельник)
+function getStartOfWeek() {
+  const now = new Date();
+  const dayOfWeek = now.getDay();
+  const diff = dayOfWeek === 0 ? 6 : dayOfWeek - 1; // Отмотать до понедельника
+  now.setDate(now.getDate() - diff);
+  now.setHours(0, 0, 0, 0);
+  return now;
+}
+
+// Helper для начала сегодняшнего дня
+function getStartOfToday() {
+  const now = new Date();
+  now.setHours(0, 0, 0, 0);
+  return now;
+}
+
 // 📊 СТАТИСТИКА ДЛЯ МЕНЕДЖЕРА
 async function getManagerStats() {
+  const startOfWeek = getStartOfWeek();
+  const startOfToday = getStartOfToday();
+
   const [
     totalProjects,
     activeProjects,
     totalUsers,
     totalTasks,
     completedTasks,
+    allTimeEntriesThisWeek,
+    allTimeEntriesToday,
+    allProjects,
+    allTasksWithProgress,
   ] = await Promise.all([
     prisma.project.count(),
     prisma.project.count({ where: { status: "ACTIVE" } }),
     prisma.user.count(),
     prisma.task.count(),
     prisma.task.count({ where: { status: "DONE" } }),
+    prisma.timeEntry.findMany({ where: { startTime: { gte: startOfWeek } } }), // Все записи за неделю
+    prisma.timeEntry.findMany({ where: { startTime: { gte: startOfToday } } }), // Все записи за день
+    prisma.project.findMany({ select: { budget: true } }), // Все бюджеты
+    prisma.task.findMany({ select: { progress: true, status: true } }), // Для расчета used budget (примерно)
   ]);
+
+  // Часы за неделю (duration в минутах -> часы)
+  const hoursThisWeek =
+    allTimeEntriesThisWeek.reduce(
+      (total, entry) => total + (entry.duration || 0),
+      0
+    ) / 60;
+
+  // Часы за сегодня
+  const hoursToday =
+    allTimeEntriesToday.reduce(
+      (total, entry) => total + (entry.duration || 0),
+      0
+    ) / 60;
+
+  // Продуктивность: % выполненных задач от всех
+  const productivity =
+    totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+
+  // Budget stats: planned — сумма всех budget; used — сумма budget * progress/100 для активных/завершенных; remaining = planned - used
+  const plannedBudget = allProjects.reduce(
+    (sum, p) => sum + (p.budget || 0),
+    0
+  );
+  const usedBudget =
+    (allTasksWithProgress.reduce((sum, t) => {
+      if (t.status !== "DONE") return sum; // Только для завершенных задач (упрощение; можно доработать)
+      return sum + (t.progress || 0); // Предполагаем, что progress связан с бюджетом (адаптируйте под вашу логику)
+    }, 0) /
+      100) *
+    plannedBudget; // Примерный расчет
+  const remainingBudget = plannedBudget - usedBudget;
 
   return {
     totalTasks,
     completedTasks,
     inProgressTasks: totalTasks - completedTasks,
-    hoursThisWeek: 240, // Заглушка
-    hoursToday: 32, // Заглушка
-    productivity: 75,
+    hoursThisWeek: Math.round(hoursThisWeek * 10) / 10, // Округление до 1 знака
+    hoursToday: Math.round(hoursToday * 10) / 10,
+    productivity,
     projectsCount: totalProjects,
     teamMembersCount: totalUsers,
     budgetStats: {
-      planned: 50000,
-      used: 42000,
-      remaining: 8000,
+      planned: plannedBudget,
+      used: Math.round(usedBudget),
+      remaining: Math.round(remainingBudget),
     },
   };
 }
 
 // 📊 СТАТИСТИКА ДЛЯ ТИМЛИДА
 async function getTeamLeadStats(userId) {
+  const startOfWeek = getStartOfWeek();
+  const startOfToday = getStartOfToday();
+
   // Находим команды где пользователь лидер
   const userTeams = await prisma.teamUser.findMany({
     where: {
@@ -78,111 +141,47 @@ async function getTeamLeadStats(userId) {
     0
   );
 
-  // Собираем задачи всех проектов команды
-  const teamTasks = userTeams.flatMap((teamUser) =>
-    teamUser.team.projects.flatMap((projectTeam) => projectTeam.project.tasks)
+  // Все задачи в проектах команд
+  const allTasks = userTeams.flatMap((teamUser) =>
+    teamUser.team.projects.flatMap((pt) => pt.project.tasks)
   );
 
-  // Получаем всех членов команды
-  const teamMemberIds = userTeams.flatMap((teamUser) =>
-    teamUser.team.members.map((member) => member.userId)
-  );
-
-  // Временные записи команды за текущую неделю
-  const weekStart = new Date();
-  weekStart.setDate(weekStart.getDate() - weekStart.getDay());
-  weekStart.setHours(0, 0, 0, 0);
-
-  const weekEnd = new Date();
-  weekEnd.setDate(weekStart.getDate() + 6);
-  weekEnd.setHours(23, 59, 59, 999);
-
-  const teamTimeEntriesThisWeek = await prisma.timeEntry.findMany({
-    where: {
-      userId: {
-        in: teamMemberIds,
-      },
-      startTime: {
-        gte: weekStart,
-        lte: weekEnd,
-      },
-    },
-  });
-
-  // Временные записи команды за сегодня
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
-
-  const todayEnd = new Date();
-  todayEnd.setHours(23, 59, 59, 999);
-
-  const teamTimeEntriesToday = await prisma.timeEntry.findMany({
-    where: {
-      userId: {
-        in: teamMemberIds,
-      },
-      startTime: {
-        gte: todayStart,
-        lte: todayEnd,
-      },
-    },
-  });
-
-  // Расчет часов команды
-  const hoursThisWeek =
-    teamTimeEntriesThisWeek.reduce((total, entry) => {
-      return total + (entry.duration || 0);
-    }, 0) / 60;
-
-  const hoursToday =
-    teamTimeEntriesToday.reduce((total, entry) => {
-      return total + (entry.duration || 0);
-    }, 0) / 60;
-
-  // Статистика по задачам
-  const completedTasks = teamTasks.filter(
+  const completedTasks = allTasks.filter(
     (task) => task.status === "DONE"
   ).length;
-  const inProgressTasks = teamTasks.filter(
-    (task) =>
-      task.status === "IN_PROGRESS" ||
-      task.status === "REVIEW" ||
-      task.status === "TESTING"
+  const inProgressTasks = allTasks.filter((task) =>
+    ["IN_PROGRESS", "REVIEW", "TESTING"].includes(task.status)
   ).length;
 
-  // Продуктивность команды = % выполненных задач
-  const productivity =
-    teamTasks.length > 0
-      ? Math.round((completedTasks / teamTasks.length) * 100)
-      : 0;
-
-  // Просроченные задачи команды
-  const overdueTasks = teamTasks.filter(
-    (task) =>
-      task.dueDate && task.dueDate < new Date() && task.status !== "DONE"
-  ).length;
-
-  // Бюджетная статистика (если есть бюджет у проектов)
-  const budgetStats = userTeams.reduce(
-    (acc, teamUser) => {
-      teamUser.team.projects.forEach((projectTeam) => {
-        const project = projectTeam.project;
-        if (project.budget) {
-          acc.planned += project.budget;
-          // Здесь можно добавить логику расчета использованного бюджета
-          // на основе времени или других метрик
-          acc.used += project.budget * (project.progress / 100);
-        }
-      });
-      return acc;
-    },
-    { planned: 0, used: 0, remaining: 0 }
+  // Все timeEntries за неделю/день в задачах команд
+  const timeEntriesThisWeek = allTasks.flatMap((task) =>
+    task.timeEntries.filter((entry) => entry.startTime >= startOfWeek)
+  );
+  const timeEntriesToday = allTasks.flatMap((task) =>
+    task.timeEntries.filter((entry) => entry.startTime >= startOfToday)
   );
 
-  budgetStats.remaining = budgetStats.planned - budgetStats.used;
+  // Часы за неделю (в минутах -> часы)
+  const hoursThisWeek =
+    timeEntriesThisWeek.reduce(
+      (total, entry) => total + (entry.duration || 0),
+      0
+    ) / 60;
+
+  // Часы за сегодня
+  const hoursToday =
+    timeEntriesToday.reduce(
+      (total, entry) => total + (entry.duration || 0),
+      0
+    ) / 60;
+
+  // Продуктивность: % выполненных задач от всех в командах
+  const totalTasks = allTasks.length;
+  const productivity =
+    totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
   return {
-    totalTasks: teamTasks.length,
+    totalTasks,
     completedTasks,
     inProgressTasks,
     hoursThisWeek: Math.round(hoursThisWeek * 10) / 10,
@@ -190,89 +189,62 @@ async function getTeamLeadStats(userId) {
     productivity,
     projectsCount,
     teamMembersCount,
-    overdueTasks,
-    budgetStats: budgetStats.planned > 0 ? budgetStats : undefined,
+    overdueTasks: allTasks.filter(
+      (task) =>
+        task.dueDate &&
+        new Date(task.dueDate) < new Date() &&
+        task.status !== "DONE"
+    ).length,
   };
 }
-// 📊 СТАТИСТИКА ДЛЯ РАЗРАБОТЧИКА/ТЕСТИРОВЩИКА
-async function getDeveloperStats(userId) {
-  // Задачи пользователя
-  const userTasks = await prisma.task.findMany({
-    where: {
-      OR: [{ assigneeId: userId }, { creatorId: userId }],
-    },
-    include: {
-      timeEntries: {
-        where: {
-          userId: userId,
-        },
-      },
-    },
-  });
 
-  // Проекты пользователя
-  const userProjects = await prisma.project.findMany({
-    where: {
-      teams: {
-        some: {
-          team: {
-            members: {
-              some: { userId: userId },
-            },
+// 📊 СТАТИСТИКА ДЛЯ РАЗРАБОТЧИКА/ТЕСТЕРА
+async function getDeveloperStats(userId) {
+  const startOfWeek = getStartOfWeek();
+  const startOfToday = getStartOfToday();
+
+  const [
+    userTasks,
+    timeEntriesThisWeek,
+    timeEntriesToday,
+    activeTimerEntry,
+    userProjects,
+  ] = await Promise.all([
+    prisma.task.findMany({
+      where: {
+        OR: [{ assigneeId: userId }, { creatorId: userId }],
+      },
+    }),
+    prisma.timeEntry.findMany({
+      where: {
+        userId,
+        startTime: { gte: startOfWeek },
+      },
+    }),
+    prisma.timeEntry.findMany({
+      where: {
+        userId,
+        startTime: { gte: startOfToday },
+      },
+    }),
+    prisma.timeEntry.findFirst({
+      where: {
+        userId,
+        endTime: null,
+      },
+      orderBy: { startTime: "desc" },
+    }),
+    prisma.project.findMany({
+      where: {
+        tasks: {
+          some: {
+            OR: [{ assigneeId: userId }, { creatorId: userId }],
           },
         },
       },
-    },
-  });
+    }),
+  ]);
 
-  // Временные записи за текущую неделю
-  const weekStart = new Date();
-  weekStart.setDate(weekStart.getDate() - weekStart.getDay()); // Начало недели (воскресенье)
-  weekStart.setHours(0, 0, 0, 0);
-
-  const weekEnd = new Date();
-  weekEnd.setDate(weekStart.getDate() + 6); // Конец недели (суббота)
-  weekEnd.setHours(23, 59, 59, 999);
-
-  const timeEntriesThisWeek = await prisma.timeEntry.findMany({
-    where: {
-      userId: userId,
-      startTime: {
-        gte: weekStart,
-        lte: weekEnd,
-      },
-    },
-  });
-
-  // Временные записи за сегодня
-  const todayStart = new Date();
-  todayStart.setHours(0, 0, 0, 0);
-
-  const todayEnd = new Date();
-  todayEnd.setHours(23, 59, 59, 999);
-
-  const timeEntriesToday = await prisma.timeEntry.findMany({
-    where: {
-      userId: userId,
-      startTime: {
-        gte: todayStart,
-        lte: todayEnd,
-      },
-    },
-  });
-
-  // Активный таймер (последняя незавершенная запись)
-  const activeTimerEntry = await prisma.timeEntry.findFirst({
-    where: {
-      userId: userId,
-      endTime: null,
-    },
-    orderBy: {
-      startTime: "desc",
-    },
-  });
-
-  // Расчеты
   const completedTasks = userTasks.filter(
     (task) => task.status === "DONE"
   ).length;
@@ -280,17 +252,19 @@ async function getDeveloperStats(userId) {
     ["IN_PROGRESS", "REVIEW", "TESTING"].includes(task.status)
   ).length;
 
-  // Часы за неделю (в минутах, потом переводим в часы)
+  // Часы за неделю (в минутах -> часы)
   const hoursThisWeek =
-    timeEntriesThisWeek.reduce((total, entry) => {
-      return total + (entry.duration || 0);
-    }, 0) / 60;
+    timeEntriesThisWeek.reduce(
+      (total, entry) => total + (entry.duration || 0),
+      0
+    ) / 60;
 
   // Часы за сегодня
   const hoursToday =
-    timeEntriesToday.reduce((total, entry) => {
-      return total + (entry.duration || 0);
-    }, 0) / 60;
+    timeEntriesToday.reduce(
+      (total, entry) => total + (entry.duration || 0),
+      0
+    ) / 60;
 
   // Активный таймер
   let activeTimer = null;
@@ -317,14 +291,16 @@ async function getDeveloperStats(userId) {
     totalTasks: userTasks.length,
     completedTasks,
     inProgressTasks,
-    hoursThisWeek: Math.round(hoursThisWeek * 10) / 10, // Округление до 1 знака
+    hoursThisWeek: Math.round(hoursThisWeek * 10) / 10,
     hoursToday: Math.round(hoursToday * 10) / 10,
     activeTimer,
     productivity,
     projectsCount: userProjects.length,
     overdueTasks: userTasks.filter(
       (task) =>
-        task.dueDate && task.dueDate < new Date() && task.status !== "DONE"
+        task.dueDate &&
+        new Date(task.dueDate) < new Date() &&
+        task.status !== "DONE"
     ).length,
   };
 }

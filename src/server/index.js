@@ -21,7 +21,23 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 app.use(helmet());
-app.use(cors());
+
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      if (
+        !origin ||
+        origin.includes("localhost") ||
+        origin.includes("127.0.0.1")
+      ) {
+        callback(null, true);
+      } else {
+        callback(new Error("Not allowed by CORS"));
+      }
+    },
+    credentials: true,
+  })
+);
 app.use(morgan("combined"));
 app.use(express.json());
 
@@ -175,34 +191,16 @@ app.post("/api/tasks", authMiddleware, async (req, res) => {
     res.status(500).json({ error: "Failed to create task" });
   }
 });
-
-// 📊 ДАШБОРД - ОБЩАЯ СТАТИСТИКА
 app.get("/api/dashboard/stats", authMiddleware, async (req, res) => {
   try {
-    const userId = req.user.userId;
-    const user = await prisma.user.findUnique({
-      where: { id: userId },
-      include: {
-        teams: {
-          include: {
-            team: {
-              include: {
-                members: true,
-                projects: {
-                  include: {
-                    project: true,
-                  },
-                },
-              },
-            },
-          },
-        },
-      },
-    });
+    const userId = req.user.userId; // Из JWT
+    const user = await prisma.user.findUnique({ where: { id: userId } });
 
-    let stats = {};
+    if (!user) {
+      return res.status(404).json({ error: "User not found" });
+    }
 
-    // 📈 СТАТИСТИКА ПО РОЛЯМ
+    let stats;
     switch (user.role) {
       case "MANAGER":
         stats = await getManagerStats();
@@ -210,20 +208,15 @@ app.get("/api/dashboard/stats", authMiddleware, async (req, res) => {
       case "TEAM_LEAD":
         stats = await getTeamLeadStats(userId);
         break;
-      case "DEVELOPER":
+      default: // DEVELOPER или TESTER
         stats = await getDeveloperStats(userId);
         break;
-      case "TESTER":
-        stats = await getDeveloperStats(userId);
-        break;
-      default:
-        stats = await getDeveloperStats(userId);
     }
 
     res.json(stats);
   } catch (error) {
     console.error("Dashboard stats error:", error);
-    res.status(500).json({ error: "Failed to fetch dashboard stats" });
+    res.status(500).json({ error: "Failed to get dashboard stats" });
   }
 });
 
@@ -1357,6 +1350,108 @@ app.patch("/api/projects/:projectId", authMiddleware, async (req, res) => {
   } catch (error) {
     console.error("Update project error:", error);
     res.status(500).json({ error: "Failed to update project" });
+  }
+});
+// === СМЕНА СТАТУСА ЗАДАЧИ — РАБОЧАЯ ВЕРСИЯ ===
+app.put("/api/tasks/:id/status", authMiddleware, async (req, res) => {
+  const taskId = req.params.id; // ← оставляем как строку, НЕ parseInt!
+  const { status } = req.body;
+
+  // Проверяем, что статус валидный
+  const validStatuses = ["TODO", "IN_PROGRESS", "REVIEW", "TESTING", "DONE"];
+  if (!validStatuses.includes(status)) {
+    return res.status(400).json({ error: "Некорректный статус" });
+  }
+
+  try {
+    const task = await prisma.task.findUnique({
+      where: { id: taskId }, // ← строка, всё ок
+      include: {
+        assignee: { select: { id: true, role: true } },
+        project: {
+          include: {
+            teams: {
+              include: {
+                team: {
+                  include: {
+                    members: {
+                      where: { role: "LEADER" },
+                      select: { userId: true },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!task) {
+      return res.status(404).json({ error: "Задача не найдена" });
+    }
+
+    const user = await prisma.user.findUnique({
+      where: { id: req.user.userId },
+      select: { id: true, role: true },
+    });
+
+    // === Роли пользователя ===
+    const isAssignee = task.assigneeId === user.id;
+    const isManager = user.role === "MANAGER";
+
+    // Является ли пользователь тимлидом хотя бы одной команды проекта?
+    const teamLeaderIds =
+      task.project?.teams.flatMap((pt) =>
+        pt.team.members.map((m) => m.userId)
+      ) || [];
+
+    const isTeamLead = teamLeaderIds.includes(user.id);
+    const isTester = user.role === "TESTER";
+    const canManage = isManager || isTeamLead || isTester;
+
+    // === Разрешённые переходы по статусам ===
+    const allowedTransitions = {
+      BACKLOG: ["TODO"],
+      TODO: ["IN_PROGRESS"],
+      IN_PROGRESS: ["REVIEW"],
+      REVIEW: ["TESTING", "IN_PROGRESS"], // TESTING — принять, IN_PROGRESS — вернуть на доработку
+      TESTING: ["DONE", "REVIEW"], // DONE — закрыть, REVIEW — вернуть на ревью
+      DONE: [],
+    };
+
+    const allowedByRole = {
+      BACKLOG: isManager || isTeamLead,
+      TODO: isAssignee,
+      IN_PROGRESS: isAssignee,
+      REVIEW: canManage,
+      TESTING: canManage,
+      DONE: false,
+    };
+
+    // === Проверки ===
+    if (!allowedTransitions[task.status]?.includes(status)) {
+      return res.status(403).json({ error: "Такой переход статуса запрещён" });
+    }
+
+    if (!allowedByRole[task.status]) {
+      return res.status(403).json({ error: "У вас нет прав на это действие" });
+    }
+
+    // === Меняем статус ===
+    const updatedTask = await prisma.task.update({
+      where: { id: taskId },
+      data: { status },
+      include: {
+        assignee: { select: { name: true } },
+        project: { select: { name: true } },
+      },
+    });
+
+    res.json(updatedTask);
+  } catch (error) {
+    console.error("Ошибка при смене статуса задачи:", error);
+    res.status(500).json({ error: "Внутренняя ошибка сервера" });
   }
 });
 app.listen(PORT, () => {

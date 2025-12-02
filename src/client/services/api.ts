@@ -22,7 +22,36 @@ import {
 } from "../types";
 const api = axios.create({
   baseURL: "http://localhost:5000/api",
+  withCredentials: true,
+  timeout: 30000,
 });
+
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    // Если Network Error или сервер ещё не готов — ждём и пробуем ещё раз (максимум 10 раз)
+    if (
+      !error.response &&
+      (error.code === "ERR_NETWORK" || error.code === "ECONNABORTED")
+    ) {
+      const maxRetries = 10;
+      let retryCount = error.config.__retryCount || 0;
+
+      if (retryCount < maxRetries) {
+        error.config.__retryCount = retryCount + 1;
+        const delay = (retryCount + 1) * 1500; // 1.5s, 3s, 4.5s...
+        console.log(
+          `Сервер ещё запускается... попытка ${
+            retryCount + 1
+          }/${maxRetries} через ${delay / 1000}с`
+        );
+        await new Promise((res) => setTimeout(res, delay));
+        return api(error.config);
+      }
+    }
+    return Promise.reject(error);
+  }
+);
 
 api.interceptors.request.use((config) => {
   const token = useAuthStore.getState().token;
@@ -78,6 +107,11 @@ export const tasksAPI = {
   getDoneTask: (): Promise<{ data: Task[] }> => api.get("/tasks/done"),
   createTask: (data: CreateTaskRequest): Promise<{ data: Task }> =>
     api.post("/tasks", data),
+  // В dashboardAPI или отдельно tasksAPI
+  updateTaskStatus: (
+    taskId: string,
+    status: TaskStatus
+  ): Promise<{ data: Task }> => api.put(`/tasks/${taskId}/status`, { status }),
 };
 
 export const ProjectAPI = {

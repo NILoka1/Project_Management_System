@@ -2,7 +2,7 @@
   "compilerOptions": {
     "target": "ES2022",
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
-    "module": "ESNext",
+    "module": "CommonJS",
     "moduleResolution": "bundler",
     "allowImportingTsExtensions": true,
     "resolveJsonModule": true,
@@ -17,8 +17,11 @@
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
     "ignoreDeprecations": "6.0",
-    "types": ["vite/client"]
+    "types": ["vite/client"],
+    "outDir": "./dist/desktop",
+    "rootDir": "./src/desktop"
   },
-  "include": ["src", "src/client/store/timerStore.ts"],
-  "references": [{ "path": "./tsconfig.node.json" }]
+  "include": ["src", "src/client/store/timerStore.ts", "src/desktop/**/*"],
+  "references": [{ "path": "./tsconfig.node.json" }],
+  "exclude": ["node_modules", "dist", "src/desktop", "src/server"]
 }
