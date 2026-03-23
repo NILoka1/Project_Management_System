@@ -1,0 +1,148 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String
+  password  String
+  role      Role     @default(DEVELOPER)
+  avatar    String?
+  
+  assignedTasks Task[] @relation("TaskAssignee")
+  createdTasks  Task[] @relation("TaskCreator")
+  teams         TeamUser[]
+  timeEntries   TimeEntry[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  status      ProjectStatus @default(ACTIVE)
+  progress    Float    @default(0)
+  budget      Float?
+  startDate   DateTime?
+  endDate     DateTime?
+  
+  tasks       Task[]
+  teams       ProjectTeam[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Task {
+  id          String   @id @default(cuid())
+  title       String
+  description String?
+  status      TaskStatus @default(BACKLOG)
+  priority    Priority @default(MEDIUM)
+  dueDate     DateTime?
+  
+  project     Project @relation(fields: [projectId], references: [id])
+  projectId   String
+  
+  assignee    User? @relation("TaskAssignee", fields: [assigneeId], references: [id])
+  assigneeId  String?
+  
+  creator     User @relation("TaskCreator", fields: [creatorId], references: [id])
+  creatorId   String
+  
+  timeEntries TimeEntry[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TimeEntry {
+  id        String   @id @default(cuid())
+  task      Task     @relation(fields: [taskId], references: [id])
+  taskId    String
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  startTime DateTime
+  endTime   DateTime?
+  duration  Int?
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Team {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  
+  members     TeamUser[]
+  projects    ProjectTeam[]
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model TeamUser {
+  id     String @id @default(cuid())
+  user   User   @relation(fields: [userId], references: [id])
+  userId String
+  team   Team   @relation(fields: [teamId], references: [id])
+  teamId String
+  role   TeamRole @default(MEMBER)
+
+  @@unique([userId, teamId])
+}
+
+model ProjectTeam {
+  id        String  @id @default(cuid())
+  project   Project @relation(fields: [projectId], references: [id])
+  projectId String
+  team      Team    @relation(fields: [teamId], references: [id])
+  teamId    String
+
+  @@unique([projectId, teamId])
+}
+
+enum Role {
+  MANAGER
+  TEAM_LEAD
+  DEVELOPER
+  TESTER
+}
+
+enum ProjectStatus {
+  PLANNING
+  ACTIVE
+  ON_HOLD
+  COMPLETED
+  CANCELLED
+}
+
+enum TaskStatus {
+  BACKLOG
+  TODO
+  IN_PROGRESS
+  REVIEW
+  TESTING
+  DONE
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum TeamRole {
+  LEADER
+  MEMBER
+}
