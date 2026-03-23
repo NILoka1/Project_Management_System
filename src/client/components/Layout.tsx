@@ -3,17 +3,18 @@ import { AppShell, Group, Text, Button, NavLink, Stack } from "@mantine/core";
 import { useAuthStore } from "../store/authStore";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Timers } from "../components/Timers";
+import { JSX } from "react";
 
 interface LayoutProps {
   children: React.ReactNode;
 }
 
-export function Layout({ children }: LayoutProps) {
+export function Layout({ children }: LayoutProps): JSX.Element {
   const { user, isAuthenticated, logout } = useAuthStore();
   const navigate = useNavigate();
   const location = useLocation();
 
-  const handleLogout = () => {
+  const handleLogout = () : void => {
     logout();
     navigate("/");
   };

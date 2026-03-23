@@ -1,11 +1,11 @@
-import { useState } from "react";
+import { JSX, useState } from "react";
 import { Container, Tabs, Stack, Text } from "@mantine/core";
 import Tasks from "./components/Tasks";
 import BacklogTasks from "./components/backlog";
 import DoneTasks from "./components/doneTasks";
 import { useAuthStore } from "../../store/authStore";
 
-export function TasksPage() {
+export function TasksPage() :JSX.Element {
   const [activeTab, setActiveTab] = useState<string | null>("all");
   const { user } = useAuthStore();
   const role = user?.role;

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { JSX, useState } from "react";
 import {
   TextInput,
   PasswordInput,
@@ -12,7 +12,7 @@ import { useAuthStore } from "../store/authStore";
 import { authAPI } from "../services/api";
 import { RegisterData } from "../types";
 
-export function RegisterForm({ onSuccess }: { onSuccess?: () => void }) {
+export function RegisterForm({ onSuccess }: { onSuccess?: () => void }): JSX.Element {
   const [formData, setFormData] = useState<RegisterData>({
     email: "",
     password: "",
@@ -22,7 +22,7 @@ export function RegisterForm({ onSuccess }: { onSuccess?: () => void }) {
   const [error, setError] = useState("");
   const { login } = useAuthStore();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) :Promise<void> => {
     e.preventDefault();
     setLoading(true);
     setError("");
@@ -33,7 +33,7 @@ export function RegisterForm({ onSuccess }: { onSuccess?: () => void }) {
 
       login(user, token);
       onSuccess?.();
-    } catch (err: any) {
+    } catch (err) {
       setError(err.response?.data?.error || "Ошибка регистрации");
     } finally {
       setLoading(false);

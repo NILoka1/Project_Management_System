@@ -3,6 +3,7 @@ import { useForm } from "@mantine/form";
 import { useDisclosure } from "@mantine/hooks";
 import { CreateTeamReq, Team } from "../../types";
 import { TeamsAPI } from "../../services/api";
+import { JSX } from "react";
 
 export const NewTeams = ({
   setTeams,
@@ -10,7 +11,7 @@ export const NewTeams = ({
 }: {
   setTeams: React.Dispatch<React.SetStateAction<Team[]>>;
   teams: Team[];
-}) => {
+}): JSX.Element => {
   const [modal, { open, close }] = useDisclosure(false);
 
   const form = useForm<CreateTeamReq>({
@@ -30,7 +31,7 @@ export const NewTeams = ({
     },
   });
 
-  const handleSubmit = async (values: CreateTeamReq) => {
+  const handleSubmit = async (values: CreateTeamReq): Promise<void> => {
     try {
       const res = (await TeamsAPI.createTeam(values)).data;
       setTeams([...teams, res]);

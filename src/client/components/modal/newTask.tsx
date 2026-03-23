@@ -1,22 +1,12 @@
-import {
-  Button,
-  Group,
-  Modal,
-  Select,
-  Stack,
-  Textarea,
-  TextInput,
-} from "@mantine/core";
-import { useForm } from "@mantine/form";
-import { useDisclosure } from "@mantine/hooks";
-import { CreateTaskRequest, Project } from "../../types";
-import { DateInput } from "@mantine/dates";
-import { ProjectAPI, tasksAPI } from "../../services/api";
-import { useEffect, useState } from "react";
+import { Button, Group, Modal, Select, Stack, Textarea, TextInput } from '@mantine/core';
+import { useForm } from '@mantine/form';
+import { useDisclosure } from '@mantine/hooks';
+import { CreateTaskRequest, Project } from '../../types';
+import { DateInput } from '@mantine/dates';
+import { ProjectAPI, tasksAPI } from '../../services/api';
+import { JSX, useEffect, useState } from 'react';
 
-
-
-export const NewTask = () => {
+export const NewTask = (): JSX.Element => {
   const [modal, { open, close }] = useDisclosure(false);
   const [projects, setProjects] = useState<Project[]>([]);
   useEffect(() => {
@@ -26,57 +16,55 @@ export const NewTask = () => {
     }
   }, [modal]);
 
-  const fetchProjects = async () => {
+  const fetchProjects = async (): Promise<void> => {
     try {
       const response = await ProjectAPI.getProjects();
       setProjects(response.data);
     } catch (error) {
-      console.error("Error fetching projects:", error);
+      console.error('Error fetching projects:', error);
     }
   };
 
   const form = useForm<CreateTaskRequest>({
     initialValues: {
-      title: "",
-      description: "",
+      title: '',
+      description: '',
       dueDate: undefined,
-      projectId: "",
+      projectId: '',
     },
     validate: {
       title: (value) =>
-        value.trim().length < 2
-          ? "Название должно содержать минимум 2 символа"
-          : null,
+        value.trim().length < 2 ? 'Название должно содержать минимум 2 символа' : null,
       description: (value) =>
-        value.trim().length < 5
-          ? "Описание должно содержать минимум 5 символов"
-          : null,
-      projectId: (value) => (!value ? "Выберите проект" : null),
+        value.trim().length < 5 ? 'Описание должно содержать минимум 5 символов' : null,
+      projectId: (value) => (!value ? 'Выберите проект' : null),
     },
   });
 
-  const handleSubmit = async (values: CreateTaskRequest) => {
+  const handleSubmit = async (values: CreateTaskRequest): Promise<void> => {
     try {
       const res = (await tasksAPI.createTask(values)).data;
       console.log(res);
       form.reset();
       close();
     } catch (error) {
-      console.error("Error creating task:", error);
+      console.error('Error creating task:', error);
     }
   };
 
   return (
     <>
-      <Button fullWidth onClick={open}>Создать задачу</Button>
+      <Button fullWidth onClick={open}>
+        Создать задачу
+      </Button>
       <Modal opened={modal} onClose={close} title="Создать задачу" size="lg">
         <form onSubmit={form.onSubmit(handleSubmit)}>
-          <Stack gap={"md"}>
+          <Stack gap={'md'}>
             <TextInput
               label="Название задачи"
               placeholder="Введите название задачи"
               required
-              {...form.getInputProps("title")}
+              {...form.getInputProps('title')}
             />
 
             <Textarea
@@ -84,7 +72,7 @@ export const NewTask = () => {
               placeholder="Опишите задачу"
               minRows={3}
               required
-              {...form.getInputProps("description")}
+              {...form.getInputProps('description')}
             />
 
             <Select
@@ -95,7 +83,7 @@ export const NewTask = () => {
                 label: project.name,
               }))}
               required
-              {...form.getInputProps("projectId")}
+              {...form.getInputProps('projectId')}
             />
 
             <DateInput
@@ -104,7 +92,7 @@ export const NewTask = () => {
               valueFormat="DD.MM.YYYY"
               minDate={new Date()}
               clearable
-              {...form.getInputProps("dueDate")}
+              {...form.getInputProps('dueDate')}
             />
 
             <Group justify="flex-end" mt="md">

@@ -5,12 +5,10 @@ import path from 'path'
 export default defineConfig({
   plugins: [react()],
   root: "src/client",
+  envDir: ".",  // Искать .env в корне
   build: {
-    outDir: path.resolve(__dirname, "dist/client"), // ← вот сюда!
-    emptyOutDir: false,
-    rollupOptions: {
-      input: path.resolve(__dirname, "src/client/index.html"),
-    },
+    outDir: path.resolve(__dirname, "dist/client"),
+    emptyOutDir: true,
   },
   server: {
     port: 3000,
@@ -19,13 +17,10 @@ export default defineConfig({
         target: "http://localhost:5000",
         changeOrigin: true,
         secure: false,
-        // Это важно для Windows + Docker
-        configure: (proxy, options) => {
-          proxy.on("error", (err) => {
-            console.log("Proxy error:", err);
-          });
-        },
       },
     },
   },
+  define: {
+    'process.env': process.env
+  }
 });

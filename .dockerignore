@@ -1,9 +1,0 @@
-# .dockerignore — ТОЛЬКО ЭТО, БОЛЬШЕ НИЧЕГО НЕ ИГНОРИРУЙ!
-
-node_modules
-dist
-release
-.env
-.git
-.gitignore
-*.log

@@ -1,8 +1,9 @@
 
 import { Container, Title, Text, Stack } from '@mantine/core';
 import { useAuthStore } from '../store/authStore';
+import { JSX } from 'react';
 
-export function ProfilePage() {
+export function ProfilePage(): JSX.Element {
   const { user } = useAuthStore();
 
   return (

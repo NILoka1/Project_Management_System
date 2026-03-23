@@ -1,11 +1,11 @@
-import { useState } from 'react';
+import { JSX, useState } from 'react';
 import { Container, Tabs } from '@mantine/core';
 import { RegisterForm } from '../components/RegisterForm';
 import { LoginForm } from '../components/LoginForm';
 import { useAuthStore } from '../store/authStore';
 import { Navigate } from 'react-router-dom';
 
-export function HomePage() {
+export function HomePage(): JSX.Element {
   const { isAuthenticated } = useAuthStore();
   const [activeTab, setActiveTab] = useState<string | null>('login');
 

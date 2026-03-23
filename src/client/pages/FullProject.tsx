@@ -9,45 +9,39 @@ import {
   TextInput,
   NumberInput,
   Select,
-} from "@mantine/core";
-import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
-import { FullProjects } from "../types/index";
-import { ProjectAPI } from "../services/api";
-import { useDisclosure } from "@mantine/hooks";
-import { DateInput } from "@mantine/dates";
+} from '@mantine/core';
+import { JSX, useEffect, useState } from 'react';
+import { useParams } from 'react-router-dom';
+import { FullProjects } from '../types/index';
+import { ProjectAPI } from '../services/api';
+import { useDisclosure } from '@mantine/hooks';
+import { DateInput } from '@mantine/dates';
 
-export const FullProject = () => {
+export const FullProject = (): JSX.Element => {
   const { projectId } = useParams<{ projectId: string }>();
   const [project, setProject] = useState<FullProjects>();
   const [isUpdate, { open, close }] = useDisclosure(false);
 
   // Состояния для хранения измененных данных
-  const [name, setName] = useState("");
-  const [description, setDescription] = useState("");
-  const [status, setStatus] = useState("");
+  const [name, setName] = useState('');
+  const [description, setDescription] = useState('');
+  const [status, setStatus] = useState('');
   const [progress, setProgress] = useState(0);
   const [budget, setBudget] = useState<number | null>(null);
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
 
-  if (!projectId) {
-    return <Text>Ошибка!</Text>;
-  }
-
   useEffect(() => {
-    const getProject = async () => {
+    const getProject = async (): Promise<void> => {
       const projectData = (await ProjectAPI.getProject(projectId)).data;
       setProject(projectData);
       // Инициализируем состояния данными из API
       setName(projectData.name);
-      setDescription(projectData.description || "");
+      setDescription(projectData.description || '');
       setStatus(projectData.status);
       setProgress(projectData.progress);
       setBudget(projectData.budget);
-      setStartDate(
-        projectData.startDate ? new Date(projectData.startDate) : null
-      );
+      setStartDate(projectData.startDate ? new Date(projectData.startDate) : null);
       setEndDate(projectData.endDate ? new Date(projectData.endDate) : null);
     };
 
@@ -55,7 +49,7 @@ export const FullProject = () => {
   }, [projectId]);
 
   // Обработчик сохранения
-  const handleSave = async () => {
+  const handleSave = async (): Promise<void> => {
     try {
       await ProjectAPI.updateProject(projectId, {
         name,
@@ -83,14 +77,12 @@ export const FullProject = () => {
 
       close(); // Закрываем режим редактирования
     } catch (error) {
-      console.error("Ошибка при обновлении:", error);
+      console.error('Ошибка при обновлении:', error);
     }
   };
 
   // Обработчики изменений
-  const handleInputChange = (
-    setter: React.Dispatch<React.SetStateAction<any>>
-  ) => {
+  const handleInputChange = (setter: React.Dispatch<React.SetStateAction<any>>) => {
     return (value: any) => {
       setter(value);
       open();
@@ -129,11 +121,11 @@ export const FullProject = () => {
             value={status}
             onChange={handleInputChange(setStatus)}
             data={[
-              { value: "PLANNING", label: "Планирование" },
-              { value: "ACTIVE", label: "Активный" },
-              { value: "ON_HOLD", label: "На паузе" },
-              { value: "COMPLETED", label: "Завершен" },
-              { value: "CANCELLED", label: "Отменен" },
+              { value: 'PLANNING', label: 'Планирование' },
+              { value: 'ACTIVE', label: 'Активный' },
+              { value: 'ON_HOLD', label: 'На паузе' },
+              { value: 'COMPLETED', label: 'Завершен' },
+              { value: 'CANCELLED', label: 'Отменен' },
             ]}
           />
         </Group>
@@ -186,12 +178,12 @@ export const FullProject = () => {
 
         <Grid>
           <Grid.Col span={6}>
-            <Paper bg={"gray.5"} p={"md"}>
+            <Paper bg={'gray.5'} p={'md'}>
               <Stack>
                 <Text fw={500}>Команды:</Text>
-                <Flex wrap={"wrap"} gap="sm">
+                <Flex wrap={'wrap'} gap="sm">
                   {project?.teams?.map((team) => (
-                    <Paper key={team.id} p={"sm"} bg={"gray.3"}>
+                    <Paper key={team.id} p={'sm'} bg={'gray.3'}>
                       <Text fw={500}>{team.name}</Text>
                       <Text size="sm">{team.description}</Text>
                     </Paper>
@@ -202,12 +194,12 @@ export const FullProject = () => {
           </Grid.Col>
 
           <Grid.Col span={6}>
-            <Paper bg={"gray.5"} p={"md"}>
+            <Paper bg={'gray.5'} p={'md'}>
               <Stack>
                 <Text fw={500}>Задачи:</Text>
-                <Flex gap={"sm"} wrap={"wrap"}>
+                <Flex gap={'sm'} wrap={'wrap'}>
                   {project?.tasks?.map((task) => (
-                    <Paper key={task.id} p={"sm"} bg={"gray.3"}>
+                    <Paper key={task.id} p={'sm'} bg={'gray.3'}>
                       <Text fw={500}>{task.title}</Text>
                       <Text size="sm">Статус: {task.status}</Text>
                       <Text size="sm">Приоритет: {task.priority}</Text>
@@ -228,16 +220,12 @@ export const FullProject = () => {
                 // Отмена изменений - возвращаем исходные значения
                 if (project) {
                   setName(project.name);
-                  setDescription(project.description || "");
+                  setDescription(project.description || '');
                   setStatus(project.status);
                   setProgress(project.progress);
                   setBudget(project.budget);
-                  setStartDate(
-                    project.startDate ? new Date(project.startDate) : null
-                  );
-                  setEndDate(
-                    project.endDate ? new Date(project.endDate) : null
-                  );
+                  setStartDate(project.startDate ? new Date(project.startDate) : null);
+                  setEndDate(project.endDate ? new Date(project.endDate) : null);
                 }
                 close();
               }}

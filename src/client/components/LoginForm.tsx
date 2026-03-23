@@ -12,13 +12,14 @@ import {
 import { useAuthStore } from "../store/authStore";
 import { authAPI } from "../services/api";
 import { LoginData } from "../types";
+import { JSX } from "react";
 
 interface LoginFormProps {
   onSuccess?: () => void;
   onSwitchToRegister?: () => void;
 }
 
-export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
+export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) :JSX.Element {
   const [formData, setFormData] = useState<LoginData>({
     email: "",
     password: "",
@@ -27,7 +28,7 @@ export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
   const [error, setError] = useState("");
   const { login } = useAuthStore();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
     e.preventDefault();
     setLoading(true);
     setError("");
@@ -38,7 +39,7 @@ export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
 
       login(user, token);
       onSuccess?.();
-    } catch (err: any) {
+    } catch (err) {
       setError(err.response?.data?.error || "Ошибка входа");
     } finally {
       setLoading(false);

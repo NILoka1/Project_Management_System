@@ -1,7 +1,8 @@
 
 import { Container, Title, Text, Stack } from '@mantine/core';
+import { JSX } from 'react';
 
-export function LoginPage() {
+export function LoginPage() :JSX.Element {
   return (
     <Container size="sm">
       <Stack gap="lg">

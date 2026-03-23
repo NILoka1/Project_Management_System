@@ -2,18 +2,19 @@
 import { Button } from "@mantine/core";
 import { IconPlayerPlay, IconPlayerStop } from "@tabler/icons-react";
 import { useTimerStore } from "../store/timerStore";
+import { JSX } from "react";
 
 interface TaskTimerProps {
   taskId: string;
   taskTitle: string;
 }
 
-export function TaskTimer({ taskId, taskTitle }: TaskTimerProps) {
+export function TaskTimer({ taskId, taskTitle }: TaskTimerProps): JSX.Element {
   const { isRunning, currentTask, startTimer, stopTimer } = useTimerStore();
 
   const isThisTaskRunning = isRunning && currentTask?.id === taskId;
 
-  const handleClick = () => {
+  const handleClick = (): void => {
     if (isThisTaskRunning) {
       stopTimer();
     } else {

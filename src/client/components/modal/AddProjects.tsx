@@ -9,11 +9,11 @@ import {
   Text,
   Paper,
   Badge,
-} from "@mantine/core";
-import { useState, useEffect } from "react";
-import { useDisclosure } from "@mantine/hooks";
-import { IconPlus, IconSearch } from "@tabler/icons-react";
-import { ProjectAPI } from "../../services/api";
+} from '@mantine/core';
+import { useState, useEffect, JSX } from 'react';
+import { useDisclosure } from '@mantine/hooks';
+import { IconPlus, IconSearch } from '@tabler/icons-react';
+import { ProjectAPI } from '../../services/api';
 
 interface Project {
   id: string;
@@ -31,23 +31,23 @@ interface AddProjectsModalProps {
 export const AddProjectsModal = ({
   onProjectsAdd,
   existingProjects = [],
-}: AddProjectsModalProps) => {
+}: AddProjectsModalProps): JSX.Element => {
   const [opened, { open, close }] = useDisclosure(false);
-  const [searchQuery, setSearchQuery] = useState("");
+  const [searchQuery, setSearchQuery] = useState('');
   const [projects, setProjects] = useState<Project[]>([]);
   const [selectedProjects, setSelectedProjects] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
   // Загрузка проектов
   useEffect(() => {
-    const fetchProjects = async () => {
+    const fetchProjects = async (): Promise<void> => {
       setLoading(true);
       try {
         // Замените на ваш реальный API вызов
         const response = await ProjectAPI.getProjects();
         setProjects(response.data);
       } catch (error) {
-        console.error("Failed to fetch projects:", error);
+        console.error('Failed to fetch projects:', error);
       } finally {
         setLoading(false);
       }
@@ -62,72 +62,58 @@ export const AddProjectsModal = ({
   const filteredProjects = projects.filter(
     (project) =>
       (project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        project.description
-          ?.toLowerCase()
-          .includes(searchQuery.toLowerCase())) &&
-      !existingProjects.includes(project.id) // Исключаем уже добавленные проекты
+        project.description?.toLowerCase().includes(searchQuery.toLowerCase())) &&
+      !existingProjects.includes(project.id), // Исключаем уже добавленные проекты
   );
 
-  const handleProjectToggle = (projectId: string) => {
+  const handleProjectToggle = (projectId: string): void => {
     setSelectedProjects((prev) =>
-      prev.includes(projectId)
-        ? prev.filter((id) => id !== projectId)
-        : [...prev, projectId]
+      prev.includes(projectId) ? prev.filter((id) => id !== projectId) : [...prev, projectId],
     );
   };
 
-  const handleAddProjects = () => {
+  const handleAddProjects = (): void => {
     onProjectsAdd(selectedProjects);
     setSelectedProjects([]);
-    setSearchQuery("");
+    setSearchQuery('');
     close();
   };
 
-  const handleClose = () => {
+  const handleClose = (): void => {
     setSelectedProjects([]);
-    setSearchQuery("");
+    setSearchQuery('');
     close();
   };
 
-  const getStatusLabel = (status: string) => {
+  const getStatusLabel = (status: string): string => {
     const statusLabels = {
-      PLANNING: "Планирование",
-      ACTIVE: "Активный",
-      ON_HOLD: "На паузе",
-      COMPLETED: "Завершен",
-      CANCELLED: "Отменен",
+      PLANNING: 'Планирование',
+      ACTIVE: 'Активный',
+      ON_HOLD: 'На паузе',
+      COMPLETED: 'Завершен',
+      CANCELLED: 'Отменен',
     };
     return statusLabels[status as keyof typeof statusLabels] || status;
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status: string): string => {
     const statusColors = {
-      PLANNING: "blue",
-      ACTIVE: "green",
-      ON_HOLD: "yellow",
-      COMPLETED: "gray",
-      CANCELLED: "red",
+      PLANNING: 'blue',
+      ACTIVE: 'green',
+      ON_HOLD: 'yellow',
+      COMPLETED: 'gray',
+      CANCELLED: 'red',
     };
-    return statusColors[status as keyof typeof statusColors] || "gray";
+    return statusColors[status as keyof typeof statusColors] || 'gray';
   };
 
   return (
     <>
-      <Button
-        leftSection={<IconPlus size={16} />}
-        onClick={open}
-        variant="light"
-        color="blue"
-      >
+      <Button leftSection={<IconPlus size={16} />} onClick={open} variant="light" color="blue">
         Добавить проекты
       </Button>
 
-      <Modal
-        opened={opened}
-        onClose={handleClose}
-        title="Добавить проекты в команду"
-        size="lg"
-      >
+      <Modal opened={opened} onClose={handleClose} title="Добавить проекты в команду" size="lg">
         <Stack>
           {/* Поиск */}
           <TextInput
@@ -138,14 +124,14 @@ export const AddProjectsModal = ({
           />
 
           {/* Список проектов */}
-          <Stack gap="sm" style={{ maxHeight: 400, overflowY: "auto" }}>
+          <Stack gap="sm" style={{ maxHeight: 400, overflowY: 'auto' }}>
             {loading ? (
               <Text c="dimmed" ta="center">
                 Загрузка...
               </Text>
             ) : filteredProjects.length === 0 ? (
               <Text c="dimmed" ta="center">
-                {searchQuery ? "Проекты не найдены" : "Нет доступных проектов"}
+                {searchQuery ? 'Проекты не найдены' : 'Нет доступных проектов'}
               </Text>
             ) : (
               filteredProjects.map((project) => (
@@ -162,11 +148,7 @@ export const AddProjectsModal = ({
                           {project.description}
                         </Text>
                         <Group gap="xs" mt={4}>
-                          <Badge
-                            size="sm"
-                            color={getStatusColor(project.status)}
-                            variant="light"
-                          >
+                          <Badge size="sm" color={getStatusColor(project.status)} variant="light">
                             {getStatusLabel(project.status)}
                           </Badge>
                           <Badge size="sm" variant="outline">

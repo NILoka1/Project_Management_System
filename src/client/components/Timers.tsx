@@ -2,11 +2,12 @@
 import { Group, Paper, Text, Button } from "@mantine/core";
 import { IconPlayerStop } from "@tabler/icons-react";
 import { useTimerStore } from "../store/timerStore";
+import { JSX } from "react";
 
-export function Timers() {
+export function Timers(): JSX.Element {
   const { isRunning, currentTask, elapsedSeconds, stopTimer } = useTimerStore();
 
-  const formatTime = (seconds: number) => {
+  const formatTime = (seconds: number): string => {
     const hours = Math.floor(seconds / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
     const secs = seconds % 60;

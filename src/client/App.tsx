@@ -1,23 +1,19 @@
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  Navigate,
-} from "react-router-dom";
-import { Layout } from "./components/Layout";
-import { ProtectedRoute } from "./components/ProtectedRoute";
-import { LoginPage } from "./pages/LoginPage";
-import { DashboardPage } from "./pages/dashboard/DashboardPage";
-import { ProfilePage } from "./pages/ProfilePage";
-import { ProjectList } from "./pages/ProjectPage";
-import { HomePage } from "./pages/HomePage";
-import { TasksPage } from "./pages/Tasks/TasksPage";
-import { TeamList } from "./pages/teamsPage";
-import { Users } from "./pages/UsersPage";
-import { FullProject } from "./pages/FullProject";
-import { FullOneTeam } from "./pages/FullTeam";
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Layout } from './components/Layout';
+import { ProtectedRoute } from './components/ProtectedRoute';
+import { LoginPage } from './pages/LoginPage';
+import { DashboardPage } from './pages/dashboard/DashboardPage';
+import { ProfilePage } from './pages/ProfilePage';
+import { ProjectList } from './pages/projectList/ProjectPage';
+import { HomePage } from './pages/HomePage';
+import { TasksPage } from './pages/Tasks/TasksPage';
+import { TeamList } from './pages/teamList/teamsPage';
+import { Users } from './pages/UsersPage';
+import { FullProject } from './pages/FullProject';
+import { FullOneTeam } from './pages/FullTeam';
+import { JSX } from 'react';
 
-export default function App() {
+export default function App(): JSX.Element {
   return (
     <Router>
       <Layout>
