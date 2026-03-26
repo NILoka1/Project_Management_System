@@ -1,51 +1,24 @@
-import { JSX, useEffect, useState } from 'react';
-import { Role, Task, TaskStatus } from '../../../types';
-import { tasksAPI } from '../../../services/api';
+import { JSX } from 'react';
+import { Role } from '../../../types';
 import { ActionIcon, Badge, Button, Flex, Group, Paper, Stack, Text } from '@mantine/core';
 import { IconClock, IconEdit } from '@tabler/icons-react';
 import { getStatusColor, getPriorityColor } from '../../../func/colors';
 import { NewTask } from '../../../components/modal/newTask';
 import { TaskTimer } from '../../../components/TaskTimer';
-import { useAuthStore } from '../../../store/authStore';
+import { useTasks } from './useTasks';
 
 const Tasks = ({ role, solo }: { role: Role; solo: boolean }): JSX.Element => {
-  const [tasks, setTasks] = useState<Task[]>();
+  const { tasks, user, handleStatusChange, loading, error } = useTasks(solo);
 
-  const { user } = useAuthStore();
-
-  useEffect(() => {
-    const fetchData = async (): Promise<void> => {
-      try {
-        let response;
-        if (solo) {
-          response = await tasksAPI.getPersonalTask();
-        } else {
-          response = await tasksAPI.getAllTask();
-        }
-
-        setTasks(response.data);
-      } catch (error) {
-        console.error('Error fetching tasks:', error);
-      }
-    };
-
-    fetchData();
-  });
-  if (!tasks) {
-    return <div>Загрузка...</div>;
+  if (loading) {
+    return <Text>Загрузка...</Text>;
+  }
+  if (error) {
+    return <Text>{error}</Text>;
   }
   if (tasks.length === 0) {
     return <Text>Нет задач</Text>;
   }
-
-  const handleStatusChange = async (newStatus: TaskStatus, taskId: string) => {
-    await tasksAPI.updateTaskStatus(taskId, newStatus);
-    setTasks(
-      tasks.filter((task) => {
-        return task.id != taskId;
-      }),
-    );
-  };
 
   return (
     <>
