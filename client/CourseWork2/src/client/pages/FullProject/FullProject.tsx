@@ -5,6 +5,7 @@ import { DateInput } from '@mantine/dates';
 import { useFullProject } from './useFullProject';
 import { FullProjectTeams } from './FullProjectTeams';
 import { FullProjectTasks } from './FullProjectTasks';
+import { StatePage } from '../../components/StatePage';
 
 const mapProjectToForm = (project: FullProjects): ProjectForm => ({
   name: project.name,
@@ -17,14 +18,20 @@ const mapProjectToForm = (project: FullProjects): ProjectForm => ({
 });
 
 export const FullProject = (): JSX.Element => {
-  const { project, isUpdate, open, close, updatedProject, setUpdatedProject, handleSave } =
-    useFullProject();
+  const {
+    project,
+    isUpdate,
+    open,
+    close,
+    updatedProject,
+    setUpdatedProject,
+    handleSave,
+    error,
+    loading,
+  } = useFullProject();
 
-  if (!updatedProject) {
-    return <Text>Загрузка...</Text>;
-  }
   return (
-    <>
+    <StatePage error={error} loading={loading}>
       <Stack>
         <Group>
           <Text fw={700}>Название:</Text>
@@ -153,6 +160,6 @@ export const FullProject = (): JSX.Element => {
 
         <Button variant="outline">Назад к проектам</Button>
       </Stack>
-    </>
+    </StatePage>
   );
 };

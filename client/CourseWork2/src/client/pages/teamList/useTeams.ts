@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { Team } from '../../types';
 import { TeamsAPI } from '../../services/api';
+import { useStatePage } from '../../func/useStatePage';
 
 export const useTeams = () => {
   const [teams, setTeams] = useState<Team[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { error, setError, loading, setLoading } = useStatePage()
 
   useEffect(() => {
     const getData = async () => {

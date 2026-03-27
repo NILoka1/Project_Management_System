@@ -2,11 +2,11 @@ import { useEffect, useState } from 'react';
 import { Task, TaskStatus } from '../../types';
 import { useAuthStore } from '../../store/authStore';
 import { tasksAPI } from '../../services/api';
+import { useStatePage } from '../../func/useStatePage';
 
 export const useUniversalTask = ({ type }: { type: 'all' | 'solo' | 'done' | 'backlog' }) => {
   const [task, setTask] = useState<Task[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { error, setError, loading, setLoading } = useStatePage()
   const { user } = useAuthStore();
 
   const checkType = async (): Promise<{

@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { FullTeam, FullTeamUpdated } from '../../types';
 import { TeamsAPI } from '../../services/api';
 import { useDisclosure } from '@mantine/hooks';
+import { useStatePage } from '../../func/useStatePage';
 
 interface useFullTeamReturn {
   team: FullTeam;
@@ -10,10 +11,11 @@ interface useFullTeamReturn {
   open: () => void;
   updatedTeam: FullTeamUpdated;
   setUpdatedTeam: React.Dispatch<React.SetStateAction<FullTeamUpdated>>;
-  error: String;
+  error: string;
   handleSave: () => Promise<void>;
   handleAddMembers: (userIds: string[]) => Promise<void>;
   handleAddProjects: (projectIds: string[]) => Promise<void>;
+  loading: boolean;
 }
 
 export const useFullTeam = (): useFullTeamReturn => {
@@ -21,13 +23,19 @@ export const useFullTeam = (): useFullTeamReturn => {
   const [team, setTeam] = useState<FullTeam>();
   const [isUpdate, { open, close }] = useDisclosure(false);
   const [updatedTeam, setUpdatedTeam] = useState<FullTeamUpdated>();
-  const [error, setError] = useState<String | null>(null);
+  const { error, setError, loading, setLoading } = useStatePage();
 
   useEffect(() => {
     const getTeam = async (): Promise<void> => {
-      const teamData = (await TeamsAPI.getTeam(teamId)).data;
-      setTeam(teamData);
-      setUpdatedTeam({ name: teamData.name, description: teamData.description });
+      try {
+        const teamData = (await TeamsAPI.getTeam(teamId)).data;
+        setTeam(teamData);
+        setUpdatedTeam({ name: teamData.name, description: teamData.description });
+      } catch {
+        setError('Не удалось загрузить данные команды');
+      } finally {
+        setLoading(false);
+      }
     };
 
     getTeam();
@@ -48,8 +56,8 @@ export const useFullTeam = (): useFullTeamReturn => {
       }
 
       close(); // Закрываем режим редактирования
-    } catch (error) {
-      setError('Ошибка при обновлении:' + String(error));
+    } catch {
+      setError('Ошибка при обновлении');
     }
   };
 
@@ -64,8 +72,8 @@ export const useFullTeam = (): useFullTeamReturn => {
           members: members,
         });
       }
-    } catch (error) {
-      setError('Ошибка при добавлении участников:' + String(error));
+    } catch {
+      setError('Ошибка при добавлении участников');
     }
   };
 
@@ -81,8 +89,8 @@ export const useFullTeam = (): useFullTeamReturn => {
         ...team,
         projects: response.data.projects,
       });
-    } catch (error) {
-      setError('Ошибка при добавлении проектов:' + String(error));
+    } catch {
+      setError('Ошибка при добавлении проектов');
     }
   };
 
@@ -96,5 +104,6 @@ export const useFullTeam = (): useFullTeamReturn => {
     handleSave,
     handleAddMembers,
     handleAddProjects,
+    loading,
   };
 };

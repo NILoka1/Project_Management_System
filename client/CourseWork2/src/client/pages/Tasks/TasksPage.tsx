@@ -1,5 +1,5 @@
 import { JSX, useState } from 'react';
-import { Container, Tabs, Stack, Text } from '@mantine/core';
+import { Container, Tabs, Stack } from '@mantine/core';
 import { useAuthStore } from '../../store/authStore';
 import { UniversalTasks } from './UniversalTasks';
 
@@ -8,9 +8,6 @@ export function TasksPage(): JSX.Element {
   const { user } = useAuthStore();
   const role = user?.role;
 
-  if (!user || !role) {
-    return <Text>Загрузка...</Text>;
-  }
 
   return (
     <Container>

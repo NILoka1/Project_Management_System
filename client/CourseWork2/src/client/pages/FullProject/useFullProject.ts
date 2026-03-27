@@ -4,6 +4,7 @@ import { FullProjects, ProjectForm } from '../../types/index';
 import { ProjectAPI } from '../../services/api';
 import { useDisclosure } from '@mantine/hooks';
 import { Dispatch, SetStateAction } from 'react';
+import { useStatePage } from '../../func/useStatePage';
 
 interface UseFullProjectReturn {
   project: FullProjects | undefined;
@@ -13,6 +14,8 @@ interface UseFullProjectReturn {
   updatedProject: ProjectForm | undefined;
   setUpdatedProject: Dispatch<SetStateAction<ProjectForm | undefined>>;
   handleSave: () => Promise<void>;
+  error: string;
+  loading: boolean;
 }
 
 const mapProjectToForm = (project: FullProjects): ProjectForm => ({
@@ -29,14 +32,21 @@ export const useFullProject = (): UseFullProjectReturn => {
   const { projectId } = useParams<{ projectId: string }>();
   const [project, setProject] = useState<FullProjects>();
   const [isUpdate, { open, close }] = useDisclosure(false);
+  const { error, setError, loading, setLoading } = useStatePage();
 
   const [updatedProject, setUpdatedProject] = useState<ProjectForm>();
 
   useEffect(() => {
     const getProject = async (): Promise<void> => {
-      const projectData = (await ProjectAPI.getProject(projectId)).data;
-      setProject(projectData);
-      setUpdatedProject(mapProjectToForm(projectData));
+      try {
+        const projectData = (await ProjectAPI.getProject(projectId)).data;
+        setProject(projectData);
+        setUpdatedProject(mapProjectToForm(projectData));
+      } catch {
+        setError('не удалось загрузить данные проекта');
+      } finally {
+        setLoading(false);
+      }
     };
 
     getProject();
@@ -67,5 +77,15 @@ export const useFullProject = (): UseFullProjectReturn => {
     }
   };
 
-  return { project, isUpdate, open, close, updatedProject, setUpdatedProject, handleSave };
+  return {
+    project,
+    isUpdate,
+    open,
+    close,
+    updatedProject,
+    setUpdatedProject,
+    handleSave,
+    error,
+    loading,
+  };
 };

@@ -1,9 +1,10 @@
-import { Card, Text, Stack, Container, Title } from '@mantine/core';
+import { Card, Text, Stack, Title } from '@mantine/core';
 import { useAuthStore } from '../../store/authStore';
 import { NewTeams } from '../../components/modal/newTeam';
 import { useNavigate } from 'react-router-dom';
 import { useTeams } from './useTeams';
 import { TeamCard } from './TeamCard';
+import { StatePage } from '../../components/StatePage';
 export function TeamList() {
   const { user } = useAuthStore();
   const role = user?.role;
@@ -14,24 +15,8 @@ export function TeamList() {
   const { teams, setTeams, loading, error } = useTeams();
   const navigate = useNavigate();
 
-  if (error) {
-    return (
-      <Container>
-        <Text>Необработанная ошибка</Text>
-      </Container>
-    );
-  }
-
-  if (loading) {
-    return (
-      <Container>
-        <Text>Загрузка проектов...</Text>
-      </Container>
-    );
-  }
-
   return (
-    <>
+    <StatePage error={error} loading={loading}>
       <Stack gap="md">
         <Title order={2}>Команды</Title>
 
@@ -47,6 +32,6 @@ export function TeamList() {
           </Card>
         )}
       </Stack>
-    </>
+    </StatePage>
   );
 }

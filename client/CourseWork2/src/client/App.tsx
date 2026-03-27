@@ -8,7 +8,7 @@ import { ProjectList } from './pages/projectList/ProjectPage';
 import { HomePage } from './pages/HomePage';
 import { TasksPage } from './pages/Tasks/TasksPage';
 import { TeamList } from './pages/teamList/teamsPage';
-import { Users } from './pages/UsersPage';
+import { Users } from './pages/UsersPage/UsersPage';
 import { FullProject } from './pages/FullProject/FullProject';
 import { FullOneTeam } from './pages/FullTeam/FullTeam';
 import { JSX } from 'react';

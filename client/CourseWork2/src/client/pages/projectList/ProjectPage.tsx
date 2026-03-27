@@ -1,10 +1,11 @@
 import { JSX } from 'react';
-import { Card, Text, Stack, Container, Title } from '@mantine/core';
+import { Card, Text, Stack, Title } from '@mantine/core';
 import { useAuthStore } from '../../store/authStore';
 import { NewProject } from '../../components/modal/newProject';
 import { useNavigate } from 'react-router-dom';
 import { useProject } from './useProjects';
 import { ProjectCard } from './projectCard';
+import { StatePage } from '../../components/StatePage';
 
 export function ProjectList(): JSX.Element {
   const { user } = useAuthStore();
@@ -12,24 +13,8 @@ export function ProjectList(): JSX.Element {
   const navigate = useNavigate();
   const { projects, setProjects, loading, error } = useProject();
 
-  if (error) {
-    return (
-      <Container>
-        <Text>Неизвестная ошибка</Text>
-      </Container>
-    );
-  }
-
-  if (loading) {
-    return (
-      <Container>
-        <Text>Загрузка проектов...</Text>
-      </Container>
-    );
-  }
-
   return (
-    <>
+    <StatePage error={error} loading={loading}>
       <Stack gap="md">
         <Title order={2}>Проекты</Title>
 
@@ -40,7 +25,7 @@ export function ProjectList(): JSX.Element {
         )}
 
         {projects.map((project) => (
-          <ProjectCard project={project} navigate={navigate}/>
+          <ProjectCard project={project} navigate={navigate} />
         ))}
 
         {projects.length === 0 && (
@@ -49,6 +34,6 @@ export function ProjectList(): JSX.Element {
           </Card>
         )}
       </Stack>
-    </>
+    </StatePage>
   );
 }

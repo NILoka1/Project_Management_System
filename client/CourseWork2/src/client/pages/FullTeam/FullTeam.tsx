@@ -3,6 +3,7 @@ import { JSX } from 'react';
 import { useFullTeam } from './useFullTeam';
 import { FullTeamMembers } from './FullTeamMembers';
 import { FullTeamProjects } from './FullTeamProjects';
+import { StatePage } from '../../components/StatePage';
 
 export const FullOneTeam = (): JSX.Element => {
   const {
@@ -15,14 +16,11 @@ export const FullOneTeam = (): JSX.Element => {
     handleSave,
     handleAddMembers,
     handleAddProjects,
+    loading,
   } = useFullTeam();
 
-  if (error) {
-    return <Text>{error}</Text>;
-  }
-
   return (
-    <>
+    <StatePage error={error} loading={loading}>
       <Stack>
         <Group>
           <Text fw={700}>Название:</Text>
@@ -73,6 +71,6 @@ export const FullOneTeam = (): JSX.Element => {
         )}
         <Button variant="outline">Выйти</Button>
       </Stack>
-    </>
+    </StatePage>
   );
 };
