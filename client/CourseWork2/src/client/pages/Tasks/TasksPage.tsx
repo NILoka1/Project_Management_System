@@ -1,12 +1,10 @@
-import { JSX, useState } from "react";
-import { Container, Tabs, Stack, Text } from "@mantine/core";
-import Tasks from "./components/Tasks";
-import BacklogTasks from "./components/backlog";
-import DoneTasks from "./components/doneTasks";
-import { useAuthStore } from "../../store/authStore";
+import { JSX, useState } from 'react';
+import { Container, Tabs, Stack, Text } from '@mantine/core';
+import { useAuthStore } from '../../store/authStore';
+import { UniversalTasks } from './UniversalTasks';
 
-export function TasksPage() :JSX.Element {
-  const [activeTab, setActiveTab] = useState<string | null>("all");
+export function TasksPage(): JSX.Element {
+  const [activeTab, setActiveTab] = useState<string | null>('all');
   const { user } = useAuthStore();
   const role = user?.role;
 
@@ -20,27 +18,27 @@ export function TasksPage() :JSX.Element {
         <Tabs value={activeTab} onChange={setActiveTab}>
           <Tabs.List>
             <Tabs.Tab value="all">Все задачи</Tabs.Tab>
-            {role != "MANAGER" && <Tabs.Tab value="my">Мои задачи</Tabs.Tab>}
+            {role != 'MANAGER' && <Tabs.Tab value="my">Мои задачи</Tabs.Tab>}
             <Tabs.Tab value="backlog">Бэклог</Tabs.Tab>
             <Tabs.Tab value="done">Выполнено</Tabs.Tab>
           </Tabs.List>
 
           <Tabs.Panel value="all">
-            <Tasks role={role} solo={false} />
+            <UniversalTasks type="all" />
           </Tabs.Panel>
 
-          {role != "MANAGER" && (
+          {role != 'MANAGER' && (
             <Tabs.Panel value="my">
-              <Tasks role={role} solo={true} />
+              <UniversalTasks type="solo" />
             </Tabs.Panel>
           )}
 
           <Tabs.Panel value="backlog">
-            <BacklogTasks role={role} />
+            <UniversalTasks type="backlog" />
           </Tabs.Panel>
 
           <Tabs.Panel value="done">
-            <DoneTasks />
+            <UniversalTasks type="done" />
           </Tabs.Panel>
         </Tabs>
       </Stack>

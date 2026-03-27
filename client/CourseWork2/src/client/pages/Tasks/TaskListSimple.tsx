@@ -25,7 +25,7 @@ export const TaskListSimple = ({ task, user }: { task: Task[]; user: SafeUser })
                 </Group>
               </Stack>
               <Group gap="xs">
-                {(user?.role === 'TEAM_LEAD' || user?.role === 'MANAGER') && (
+                {(user.role === 'TEAM_LEAD' || user.role === 'MANAGER') && (
                   <ActionIcon variant="outline" color="blue" title="Редактировать задачу">
                     <IconEdit size={16}></IconEdit>
                   </ActionIcon>

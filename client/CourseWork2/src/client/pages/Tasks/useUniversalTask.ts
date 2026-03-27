@@ -35,7 +35,7 @@ export const useUniversalTask = ({ type }: { type: 'all' | 'solo' | 'done' | 'ba
       }
     };
     fetchData();
-  }, []);
+  }, [type]);
 
   const handleStatusChange = async (newStatus: TaskStatus, taskId: string): Promise<void> => {
     await tasksAPI.updateTaskStatus(taskId, newStatus);
