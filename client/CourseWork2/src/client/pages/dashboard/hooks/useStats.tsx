@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import type { DashboardStats } from '../../../types';
 import { dashboardAPI } from '../../../services/api';
-import { useStatePage } from '../../../func/useStatePage';
+import { useStatePage } from '../../../StatePage/useStatePage';
 
 export const useStats = () => {
   const [stats, setStats] = useState<DashboardStats>();

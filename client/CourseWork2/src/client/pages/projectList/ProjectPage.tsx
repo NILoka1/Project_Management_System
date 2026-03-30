@@ -5,7 +5,7 @@ import { NewProject } from '../../components/modal/newProject';
 import { useNavigate } from 'react-router-dom';
 import { useProject } from './useProjects';
 import { ProjectCard } from './projectCard';
-import { StatePage } from '../../components/StatePage';
+import { StatePage } from '../../StatePage/StatePage';
 
 export function ProjectList(): JSX.Element {
   const { user } = useAuthStore();

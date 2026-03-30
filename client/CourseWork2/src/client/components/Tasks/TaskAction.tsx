@@ -1,6 +1,6 @@
 import { JSX } from 'react';
-import { getTaskActions } from '../func/taskActions';
-import { SafeUser, Task, TaskStatus } from '../types';
+import { getTaskActions } from '../../utils/taskActions';
+import { SafeUser, Task, TaskStatus } from '../../types';
 import { Button, Group } from '@mantine/core';
 
 export const TaskAction = ({

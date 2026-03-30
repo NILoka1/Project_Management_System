@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { dashboardAPI } from '../../../services/api';
 import { Project } from '../../../types';
-import { useStatePage } from '../../../func/useStatePage';
+import { useStatePage } from '../../../StatePage/useStatePage';
 export const useProject = () => {
   const [projects, setProjects] = useState<Project[]>([]);
   const { error, setError, loading, setLoading } = useStatePage();

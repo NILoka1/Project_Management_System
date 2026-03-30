@@ -1,6 +1,6 @@
 import React from 'react';
 import { Navigate } from 'react-router-dom';
-import { useAuthStore } from '../store/authStore';
+import { useAuthStore } from '../../store/authStore';
 import { JSX } from 'react';
 
 interface ProtectedRouteProps {
@@ -10,7 +10,6 @@ interface ProtectedRouteProps {
 
 export function ProtectedRoute({ children, allowedRoles }: ProtectedRouteProps): JSX.Element {
   const { isAuthenticated, user } = useAuthStore();
-  console.log(1, children);
 
   if (!isAuthenticated) {
     return <Navigate to="/" replace />;

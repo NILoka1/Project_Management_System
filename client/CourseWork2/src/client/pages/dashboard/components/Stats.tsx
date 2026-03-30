@@ -6,8 +6,8 @@ import {
   IconAlertCircle,
   IconFolder,
 } from '@tabler/icons-react';
-import { useStats } from './useStats';
-import { StatePage } from '../../../components/StatePage';
+import { useStats } from '../hooks/useStats';
+import { StatePage } from '../../../StatePage/StatePage';
 
 export function Stats() {
   const { stats, error, loading } = useStats();

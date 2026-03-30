@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { FullTeam, FullTeamUpdated } from '../../types';
 import { TeamsAPI } from '../../services/api';
-import { useStatePage } from '../../func/useStatePage';
+import { useStatePage } from '../../StatePage/useStatePage';
 import { useForm, UseFormReturnType } from '@mantine/form';
 import { useNavigate, NavigateFunction } from 'react-router-dom';
 interface useFullTeamReturn {

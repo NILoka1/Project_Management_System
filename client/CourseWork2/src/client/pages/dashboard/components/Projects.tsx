@@ -1,6 +1,6 @@
 import { Paper, Title, Stack, Group, Text, Progress, Badge } from '@mantine/core';
-import { useProject } from './useProject';
-import { StatePage } from '../../../components/StatePage';
+import { useProject } from '../hooks/useProject';
+import { StatePage } from '../../../StatePage/StatePage';
 
 export function Projects() {
   const { activeProjects, getStatusColor, error, loading } = useProject();

@@ -1,8 +1,8 @@
 import React from "react";
 import { AppShell, Group, Text, Button, NavLink, Stack } from "@mantine/core";
-import { useAuthStore } from "../store/authStore";
+import { useAuthStore } from "../../store/authStore";
 import { useNavigate, useLocation } from "react-router-dom";
-import { Timers } from "../components/Timers";
+import { Timers } from "../../components/Tasks/Timers";
 import { JSX } from "react";
 
 interface LayoutProps {

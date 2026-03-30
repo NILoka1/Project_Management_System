@@ -1,7 +1,7 @@
 // components/TaskTimer.tsx
 import { Button } from "@mantine/core";
 import { IconPlayerPlay, IconPlayerStop } from "@tabler/icons-react";
-import { useTimerStore } from "../store/timerStore";
+import { useTimerStore } from "../../store/timerStore";
 import { JSX } from "react";
 
 interface TaskTimerProps {

@@ -3,7 +3,7 @@ import { JSX } from 'react';
 import { useFullTeam } from './useFullTeam';
 import { FullTeamMembers } from './FullTeamMembers';
 import { FullTeamProjects } from './FullTeamProjects';
-import { StatePage } from '../../components/StatePage';
+import { StatePage } from '../../StatePage/StatePage';
 
 export const FullOneTeam = (): JSX.Element => {
   const {

@@ -4,7 +4,7 @@ import { NewTeams } from '../../components/modal/newTeam';
 import { useNavigate } from 'react-router-dom';
 import { useTeams } from './useTeams';
 import { TeamCard } from './TeamCard';
-import { StatePage } from '../../components/StatePage';
+import { StatePage } from '../../StatePage/StatePage';
 export function TeamList() {
   const { user } = useAuthStore();
   const role = user?.role;

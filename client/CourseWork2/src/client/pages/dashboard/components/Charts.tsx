@@ -13,8 +13,8 @@ import {
   SimpleGrid,
 } from '@mantine/core';
 import { IconRefresh, IconCheck, IconClock, IconList } from '@tabler/icons-react';
-import { useCharts } from './useCharts';
-import { StatePage } from '../../../components/StatePage';
+import { useCharts } from '../hooks/useCharts';
+import { StatePage } from '../../../StatePage/StatePage';
 
 export function Charts() {
   const { productivityData, timeStats, loadData, error, loading } = useCharts();

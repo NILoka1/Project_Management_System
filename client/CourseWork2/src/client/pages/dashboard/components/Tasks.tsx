@@ -1,23 +1,29 @@
 import { Paper, Title, Stack, Group, Badge, Text, Button, ActionIcon } from '@mantine/core';
 import { IconPlayerPlay, IconEdit, IconClock } from '@tabler/icons-react';
 import { Role } from '../../../types';
-import { getStatusColor, getPriorityColor } from '../../../func/colors';
-import { useTasks } from './useTasks';
-import { StatePage } from '../../../components/StatePage';
+import { getStatusColor, getPriorityColor } from '../../../utils/colors';
+import { useTasks } from '../hooks/useTasks';
+import { StatePage } from '../../../StatePage/StatePage';
 
 interface TasksProps {
   role: Role;
 }
 
 export function Tasks({ role }: TasksProps) {
-  const { activeTasks, error, loading } = useTasks();
+  const { activeTasks, error, loading, navigate } = useTasks();
 
   return (
     <StatePage error={error} loading={loading}>
       <Paper p="md" withBorder>
         <Group justify="space-between" mb="md">
           <Title order={3}>Мои активные задачи</Title>
-          <Button variant="light" size="xs">
+          <Button
+            onClick={() => {
+              navigate('/tasks');
+            }}
+            variant="light"
+            size="xs"
+          >
             Все задачи
           </Button>
         </Group>

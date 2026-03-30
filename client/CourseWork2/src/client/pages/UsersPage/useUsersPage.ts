@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { User } from '../../types/index';
 import { UsersAPI } from '../../services/api';
-import { useStatePage } from '../../func/useStatePage';
+import { useStatePage } from '../../StatePage/useStatePage';
 export const useUsersPage = () => {
   const [users, setUsers] = useState<User[]>([]);
   const [searchQuery, setSearchQuery] = useState('');

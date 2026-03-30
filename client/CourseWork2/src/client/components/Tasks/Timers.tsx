@@ -1,7 +1,7 @@
 // components/Timers.tsx
 import { Group, Paper, Text, Button } from "@mantine/core";
 import { IconPlayerStop } from "@tabler/icons-react";
-import { useTimerStore } from "../store/timerStore";
+import { useTimerStore } from "../../store/timerStore";
 import { JSX } from "react";
 
 export function Timers(): JSX.Element {

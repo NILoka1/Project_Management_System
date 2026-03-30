@@ -1,10 +1,10 @@
 import { ActionIcon, Badge, Group, Paper, Stack, Text, Flex } from '@mantine/core';
 import { IconEdit, IconClock } from '@tabler/icons-react';
-import { getStatusColor, getPriorityColor } from '../../func/colors';
+import { getStatusColor, getPriorityColor } from '../../utils/colors';
 import { NewTask } from '../../components/modal/newTask';
-import { TaskTimer } from '../../components/TaskTimer';
+import { TaskTimer } from '../../components/Tasks/TaskTimer';
 import { Task, SafeUser, TaskStatus } from '../../types';
-import { TaskAction } from '../../components/TaskAction';
+import { TaskAction } from '../../components/Tasks/TaskAction';
 
 export const TaskListFull = ({
   task,

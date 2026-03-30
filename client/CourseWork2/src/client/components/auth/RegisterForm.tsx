@@ -1,50 +1,45 @@
-import React, { useState } from "react";
+import React, { JSX, useState } from "react";
 import {
   TextInput,
   PasswordInput,
   Button,
   Paper,
   Title,
-  Text,
   Stack,
   Notification,
 } from "@mantine/core";
-import { useAuthStore } from "../store/authStore";
-import { authAPI } from "../services/api";
-import { LoginData } from "../types";
-import { JSX } from "react";
+import { useAuthStore } from "../../store/authStore";
+import { authAPI } from "../../services/api";
+import { RegisterData } from "../../types";
 
-interface LoginFormProps {
-  onSuccess?: () => void;
-  onSwitchToRegister?: () => void;
-}
-
-export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) :JSX.Element {
-  const [formData, setFormData] = useState<LoginData>({
+export function RegisterForm({ onSuccess }: { onSuccess?: () => void }): JSX.Element {
+  const [formData, setFormData] = useState<RegisterData>({
     email: "",
     password: "",
+    name: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const { login } = useAuthStore();
 
-  const handleSubmit = async (e: React.FormEvent): Promise<void> => {
+  const handleSubmit = async (e: React.FormEvent) :Promise<void> => {
     e.preventDefault();
     setLoading(true);
     setError("");
 
     try {
-      const response = await authAPI.login(formData);
+      const response = await authAPI.register(formData);
       const { user, token } = response.data;
 
       login(user, token);
       onSuccess?.();
     } catch (err) {
-      setError(err.response?.data?.error || "Ошибка входа");
+      setError(err.response?.data?.error || "Ошибка регистрации");
     } finally {
       setLoading(false);
     }
   };
+
 
   return (
     <Paper
@@ -54,7 +49,7 @@ export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) :JS
       style={{ maxWidth: 400, margin: "auto" }}
     >
       <Title order={2} ta="center" mb="lg">
-        Вход в систему
+        Регистрация
       </Title>
 
       {error && (
@@ -70,6 +65,16 @@ export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) :JS
 
       <form onSubmit={handleSubmit}>
         <Stack gap="md">
+          <TextInput
+            label="Имя"
+            placeholder="Ваше имя"
+            value={formData.name}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, name: e.target.value }))
+            }
+            required
+          />
+
           <TextInput
             label="Email"
             placeholder="hello@example.com"
@@ -88,23 +93,12 @@ export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) :JS
               setFormData((prev) => ({ ...prev, password: e.target.value }))
             }
             required
+            minLength={6}
           />
 
           <Button type="submit" loading={loading} fullWidth mt="xl">
-            Войти
+            Зарегистрироваться
           </Button>
-
-          <Text ta="center" size="sm">
-            Нет аккаунта?{" "}
-            <Text
-              component="span"
-              c="blue"
-              style={{ cursor: "pointer" }}
-              onClick={onSwitchToRegister}
-            >
-              Зарегистрироваться
-            </Text>
-          </Text>
         </Stack>
       </form>
     </Paper>

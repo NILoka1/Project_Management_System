@@ -4,7 +4,7 @@ import { DateInput } from '@mantine/dates';
 import { useFullProject } from './useFullProject';
 import { FullProjectTeams } from './FullProjectTeams';
 import { FullProjectTasks } from './FullProjectTasks';
-import { StatePage } from '../../components/StatePage';
+import { StatePage } from '../../StatePage/StatePage';
 import { Navigate } from 'react-router-dom';
 
 export const FullProject = (): JSX.Element => {

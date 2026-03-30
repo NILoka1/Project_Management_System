@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { FullProjects, ProjectForm } from '../../types/index';
 import { ProjectAPI } from '../../services/api';
-import { useStatePage } from '../../func/useStatePage';
+import { useStatePage } from '../../StatePage/useStatePage';
 import { useForm, UseFormReturnType } from '@mantine/form';
 import { useNavigate, NavigateFunction } from 'react-router-dom';
 

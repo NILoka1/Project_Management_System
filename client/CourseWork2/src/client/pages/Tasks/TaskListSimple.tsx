@@ -1,6 +1,6 @@
 import { ActionIcon, Badge, Group, Paper, Stack, Text } from '@mantine/core';
 import { IconEdit } from '@tabler/icons-react';
-import { getStatusColor } from '../../func/colors';
+import { getStatusColor } from '../../utils/colors';
 import { Task, SafeUser } from '../../types';
 
 export const TaskListSimple = ({ task, user }: { task: Task[]; user: SafeUser }) => {

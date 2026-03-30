@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { dashboardAPI } from '../../../services/api';
 import { ProductivityData, TimeStats } from '../../../types';
-import { useStatePage } from '../../../func/useStatePage';
+import { useStatePage } from '../../../StatePage/useStatePage';
 
 export const useCharts = () => {
   const [productivityData, setProductivityData] = useState<ProductivityData | null>(null);
@@ -41,5 +41,5 @@ export const useCharts = () => {
     loadData();
   }, []);
 
-  return {productivityData,timeStats,loadData, error, loading};
+  return { productivityData, timeStats, loadData, error, loading };
 };

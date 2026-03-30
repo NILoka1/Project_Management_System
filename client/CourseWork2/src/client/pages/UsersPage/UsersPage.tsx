@@ -2,7 +2,7 @@ import { Stack, Text, TextInput, Table, Select, ActionIcon, Group } from '@manti
 import { IconTrash } from '@tabler/icons-react';
 import { User } from '../../types/index';
 import { useUsersPage } from './useUsersPage';
-import { StatePage } from '../../components/StatePage';
+import { StatePage } from '../../StatePage/StatePage';
 export const Users = () => {
   const { filteredUsers, searchQuery, setSearchQuery, error, loading, handleUpdate, handleDelete } =
     useUsersPage();

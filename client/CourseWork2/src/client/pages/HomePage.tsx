@@ -1,7 +1,7 @@
 import { JSX, useState } from 'react';
 import { Container, Tabs } from '@mantine/core';
-import { RegisterForm } from '../components/RegisterForm';
-import { LoginForm } from '../components/LoginForm';
+import { RegisterForm } from '../components/auth/RegisterForm';
+import { LoginForm } from '../components/auth/LoginForm';
 import { useAuthStore } from '../store/authStore';
 import { Navigate } from 'react-router-dom';
 
@@ -23,16 +23,16 @@ export function HomePage(): JSX.Element {
         </Tabs.List>
 
         <Tabs.Panel value="login">
-          <LoginForm 
-            onSuccess={() => {/* редирект произойдет автоматически */}}
+          <LoginForm
+            onSuccess={() => {
+              /* редирект произойдет автоматически */
+            }}
             onSwitchToRegister={() => setActiveTab('register')}
           />
         </Tabs.Panel>
 
         <Tabs.Panel value="register">
-          <RegisterForm 
-            onSuccess={() => setActiveTab('login')}
-          />
+          <RegisterForm onSuccess={() => setActiveTab('login')} />
         </Tabs.Panel>
       </Tabs>
     </Container>
