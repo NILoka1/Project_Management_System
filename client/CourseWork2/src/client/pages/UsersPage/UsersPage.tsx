@@ -3,12 +3,13 @@ import { IconTrash } from '@tabler/icons-react';
 import { User } from '../../types/index';
 import { useUsersPage } from './useUsersPage';
 import { StatePage } from '../../StatePage/StatePage';
+import { UsersSkeletons } from './usersSkeletons';
 export const Users = () => {
   const { filteredUsers, searchQuery, setSearchQuery, error, loading, handleUpdate, handleDelete } =
     useUsersPage();
 
   return (
-    <StatePage error={error} loading={loading}>
+    <StatePage error={error} loading={loading} Skeleton={<UsersSkeletons />}>
       <Stack p="md">
         <Text size="xl" fw={500}>
           Пользователи

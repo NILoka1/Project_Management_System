@@ -12,9 +12,7 @@ export function TeamCard({ team, navigate }) {
           ta={'left'}
           color="rgba(0, 0, 0, 1)"
         >
-          <Text size="md" mb="md">
-            {team.name}
-          </Text>
+          {team.name}
         </Button>
       </Group>
 

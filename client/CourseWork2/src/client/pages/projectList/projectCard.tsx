@@ -11,7 +11,6 @@ export function ProjectCard({ project, navigate }) {
           ta={'left'}
           color="rgba(0, 0, 0, 1)"
         >
-          {' '}
           <Text size="md">{project.name}</Text>
         </Button>
         <Text size="sm" c="dimmed">

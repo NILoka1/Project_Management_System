@@ -5,15 +5,15 @@ import { useFullProject } from './useFullProject';
 import { FullProjectTeams } from './FullProjectTeams';
 import { FullProjectTasks } from './FullProjectTasks';
 import { StatePage } from '../../StatePage/StatePage';
-import { Navigate } from 'react-router-dom';
+import { FullProjectSkeleton } from './FullProjectSkeleton';
 
 export const FullProject = (): JSX.Element => {
   const { project, handleSave, handleCancel, error, loading, form, navigate } = useFullProject();
 
   return (
-    <StatePage error={error} loading={loading}>
-      <Stack>
-        <form onSubmit={handleSave}>
+    <StatePage error={error} loading={loading} Skeleton={<FullProjectSkeleton />}>
+      <form onSubmit={handleSave}>
+        <Stack gap={5}>
           <TextInput label={'Название'} {...form.getInputProps('name')} />
           <TextInput label={'Описание'} {...form.getInputProps('description')} />
           <Select
@@ -52,8 +52,12 @@ export const FullProject = (): JSX.Element => {
           />
           {project?.createdAt && (
             <Group>
-              <Text>Дата создания:</Text>
-              <Text>{new Date(project.createdAt).toLocaleDateString()}</Text>
+              <Text fs={'bold'} fz={14}>
+                Дата создания:
+              </Text>
+              <Text fs={'bold'} fz={14}>
+                {new Date(project.createdAt).toLocaleDateString()}
+              </Text>
             </Group>
           )}
           <Grid>
@@ -88,8 +92,8 @@ export const FullProject = (): JSX.Element => {
               Назад к проектам
             </Button>
           </Group>
-        </form>
-      </Stack>
+        </Stack>
+      </form>
     </StatePage>
   );
 };

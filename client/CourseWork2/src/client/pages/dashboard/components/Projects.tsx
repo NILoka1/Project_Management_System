@@ -1,12 +1,13 @@
 import { Paper, Title, Stack, Group, Text, Progress, Badge } from '@mantine/core';
 import { useProject } from '../hooks/useProject';
 import { StatePage } from '../../../StatePage/StatePage';
+import { ProjectSkeleton } from '../skeletons/ProjectSkeleton';
 
 export function Projects() {
   const { activeProjects, getStatusColor, error, loading } = useProject();
 
   return (
-    <StatePage error={error} loading={loading}>
+    <StatePage error={error} loading={loading} Skeleton={<ProjectSkeleton/>}>
       <Paper p="md" withBorder>
         <Title order={3} mb="md">
           Наши проекты

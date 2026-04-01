@@ -8,6 +8,7 @@ import {
 } from '@tabler/icons-react';
 import { useStats } from '../hooks/useStats';
 import { StatePage } from '../../../StatePage/StatePage';
+import { StatsSkeleton } from '../skeletons/StatSkeleton';
 
 export function Stats() {
   const { stats, error, loading } = useStats();
@@ -17,7 +18,7 @@ export function Stats() {
   }
 
   return (
-    <StatePage error={error} loading={loading}>
+    <StatePage error={error} loading={loading} Skeleton={<StatsSkeleton />}>
       <SimpleGrid cols={{ base: 1, sm: 2, lg: 4 }} spacing="md">
         {/* Продуктивность */}
         <Paper p="md" withBorder>

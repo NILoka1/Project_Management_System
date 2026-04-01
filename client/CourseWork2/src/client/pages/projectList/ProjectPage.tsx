@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { useProject } from './useProjects';
 import { ProjectCard } from './projectCard';
 import { StatePage } from '../../StatePage/StatePage';
+import { ProjectSkeleton } from './ProjectSkeleton';
 
 export function ProjectList(): JSX.Element {
   const { user } = useAuthStore();
@@ -14,7 +15,7 @@ export function ProjectList(): JSX.Element {
   const { projects, setProjects, loading, error } = useProject();
 
   return (
-    <StatePage error={error} loading={loading}>
+    <StatePage error={error} loading={loading} Skeleton={<ProjectSkeleton/>}>
       <Stack gap="md">
         <Title order={2}>Проекты</Title>
 

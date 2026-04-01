@@ -5,6 +5,7 @@ import { useNavigate } from 'react-router-dom';
 import { useTeams } from './useTeams';
 import { TeamCard } from './TeamCard';
 import { StatePage } from '../../StatePage/StatePage';
+import { TeamSkeleton } from './TeamSkeleton';
 export function TeamList() {
   const { user } = useAuthStore();
   const role = user?.role;
@@ -16,7 +17,7 @@ export function TeamList() {
   const navigate = useNavigate();
 
   return (
-    <StatePage error={error} loading={loading}>
+    <StatePage error={error} loading={loading} Skeleton={<TeamSkeleton /> }>
       <Stack gap="md">
         <Title order={2}>Команды</Title>
 
