@@ -4,16 +4,13 @@ import { Role } from '../../../types';
 import { getStatusColor, getPriorityColor } from '../../../utils/colors';
 import { useTasks } from '../hooks/useTasks';
 import { StatePage } from '../../../StatePage/StatePage';
+import { TaskSkeleton } from '../skeletons/TaskSleleton';
 
-interface TasksProps {
-  role: Role;
-}
-
-export function Tasks({ role }: TasksProps) {
+export function Tasks({ role }: { role: Role }) {
   const { activeTasks, error, loading, navigate } = useTasks();
 
   return (
-    <StatePage error={error} loading={loading}>
+    <StatePage error={error} loading={loading} Skeleton={<TaskSkeleton />}>
       <Paper p="md" withBorder>
         <Group justify="space-between" mb="md">
           <Title order={3}>Мои активные задачи</Title>

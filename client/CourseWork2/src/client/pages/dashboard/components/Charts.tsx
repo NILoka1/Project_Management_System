@@ -11,15 +11,17 @@ import {
   Button,
   Card,
   SimpleGrid,
+  Flex,
 } from '@mantine/core';
 import { IconRefresh, IconCheck, IconClock, IconList } from '@tabler/icons-react';
 import { useCharts } from '../hooks/useCharts';
 import { StatePage } from '../../../StatePage/StatePage';
+import { ChartsSkeleton } from '../skeletons/ChartsSkeleton';
 
 export function Charts() {
   const { productivityData, timeStats, loadData, error, loading } = useCharts();
   return (
-    <StatePage error={error} loading={loading}>
+    <StatePage error={error} loading={loading} Skeleton={<ChartsSkeleton />}>
       <Paper p="md" withBorder>
         <Group justify="space-between" mb="md">
           <Title order={3}>Статистика за неделю</Title>
@@ -74,7 +76,7 @@ export function Charts() {
                 />
 
                 <SimpleGrid cols={3}>
-                  <Group gap="xs">
+                  <Flex direction={'column'} gap="xs">
                     <IconCheck size={16} color="var(--mantine-color-green-6)" />
                     <div>
                       <Text size="sm" fw={500}>
@@ -84,8 +86,8 @@ export function Charts() {
                         Выполнено
                       </Text>
                     </div>
-                  </Group>
-                  <Group gap="xs">
+                  </Flex>
+                  <Flex direction={'column'} gap="xs">
                     <IconClock size={16} color="var(--mantine-color-yellow-6)" />
                     <div>
                       <Text size="sm" fw={500}>
@@ -95,8 +97,8 @@ export function Charts() {
                         В работе
                       </Text>
                     </div>
-                  </Group>
-                  <Group gap="xs">
+                  </Flex>
+                  <Flex direction={'column'} gap="xs">
                     <IconList size={16} color="var(--mantine-color-blue-6)" />
                     <div>
                       <Text size="sm" fw={500}>
@@ -106,7 +108,7 @@ export function Charts() {
                         Всего
                       </Text>
                     </div>
-                  </Group>
+                  </Flex>
                 </SimpleGrid>
               </>
             ) : (

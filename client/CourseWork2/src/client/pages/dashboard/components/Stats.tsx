@@ -14,7 +14,7 @@ export function Stats() {
   const { stats, error, loading } = useStats();
 
   if (!stats) {
-    return <Text>Загрузка</Text>;
+    return <StatsSkeleton />;
   }
 
   return (

@@ -32,7 +32,6 @@ async function getManagerStats() {
     allTimeEntriesThisWeek,
     allTimeEntriesToday,
     allProjects,
-    allTasksWithProgress,
   ] = await Promise.all([
     prisma.project.count(),
     prisma.project.count({ where: { status: "ACTIVE" } }),
@@ -42,7 +41,6 @@ async function getManagerStats() {
     prisma.timeEntry.findMany({ where: { startTime: { gte: startOfWeek } } }), // Все записи за неделю
     prisma.timeEntry.findMany({ where: { startTime: { gte: startOfToday } } }), // Все записи за день
     prisma.project.findMany({ select: { budget: true } }), // Все бюджеты
-    prisma.task.findMany({ select: { progress: true, status: true } }), // Для расчета used budget (примерно)
   ]);
 
   // Часы за неделю (duration в минутах -> часы)
@@ -63,19 +61,6 @@ async function getManagerStats() {
   const productivity =
     totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
-  // Budget stats: planned — сумма всех budget; used — сумма budget * progress/100 для активных/завершенных; remaining = planned - used
-  const plannedBudget = allProjects.reduce(
-    (sum, p) => sum + (p.budget || 0),
-    0
-  );
-  const usedBudget =
-    (allTasksWithProgress.reduce((sum, t) => {
-      if (t.status !== "DONE") return sum; // Только для завершенных задач (упрощение; можно доработать)
-      return sum + (t.progress || 0); // Предполагаем, что progress связан с бюджетом (адаптируйте под вашу логику)
-    }, 0) /
-      100) *
-    plannedBudget; // Примерный расчет
-  const remainingBudget = plannedBudget - usedBudget;
 
   return {
     totalTasks,
@@ -86,11 +71,6 @@ async function getManagerStats() {
     productivity,
     projectsCount: totalProjects,
     teamMembersCount: totalUsers,
-    budgetStats: {
-      planned: plannedBudget,
-      used: Math.round(usedBudget),
-      remaining: Math.round(remainingBudget),
-    },
   };
 }
 
