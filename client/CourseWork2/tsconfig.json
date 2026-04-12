@@ -17,7 +17,7 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true,
     "forceConsistentCasingInFileNames": true,
-    "types": ["vite/client", "node"]
+    "types": ["vite/client", "node","jest","@testing-library/jest-dom "]
   },
   "include": ["src/client/**/*"],
   "references": [{ "path": "./tsconfig.node.json" }],

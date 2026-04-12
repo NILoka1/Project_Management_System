@@ -1,6 +1,7 @@
 import { Flex, Grid, Group, Skeleton, Stack, Text } from '@mantine/core';
+import { JSX } from 'react';
 
-export const FullProjectSkeleton = () => {
+export const FullProjectSkeleton = (): JSX.Element => {
   return (
     <Stack gap={5}>
       <Group gap={2}>

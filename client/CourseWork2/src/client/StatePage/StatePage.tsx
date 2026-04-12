@@ -10,7 +10,7 @@ export const StatePage = ({
   error: string | null;
   children: React.ReactNode;
   Skeleton?: JSX.Element;
-}) => {
+}) : JSX.Element => {
   if (loading) {
     if (Skeleton) {
       return Skeleton;

@@ -8,11 +8,15 @@ export const useAuthStore = create<AuthState>()(
       user: null,
       token: null,
       isAuthenticated: false,
-      login: (user: SafeUser, token: string) => set({ user, token, isAuthenticated: true }),
-      logout: () => set({ user: null, token: null, isAuthenticated: false }),
+      login: (user: SafeUser, token: string): void => {
+        set({ user, token, isAuthenticated: true });
+      },
+      logout: (): void => {
+        set({ user: null, token: null, isAuthenticated: false });
+      },
     }),
     {
       name: 'auth-storage',
-    }
-  )
+    },
+  ),
 );
