@@ -26,32 +26,6 @@ const api = axios.create({
   timeout: 30000,
 });
 
-api.interceptors.response.use(
-  (response) => response,
-  async (error) => {
-    // Если Network Error или сервер ещё не готов — ждём и пробуем ещё раз (максимум 10 раз)
-    if (
-      !error.response &&
-      (error.code === "ERR_NETWORK" || error.code === "ECONNABORTED")
-    ) {
-      const maxRetries = 10;
-      let retryCount = error.config.__retryCount || 0;
-
-      if (retryCount < maxRetries) {
-        error.config.__retryCount = retryCount + 1;
-        const delay = (retryCount + 1) * 1500; // 1.5s, 3s, 4.5s...
-        console.log(
-          `Сервер ещё запускается... попытка ${
-            retryCount + 1
-          }/${maxRetries} через ${delay / 1000}с`
-        );
-        await new Promise((res) => setTimeout(res, delay));
-        return api(error.config);
-      }
-    }
-    return Promise.reject(error);
-  }
-);
 
 api.interceptors.request.use((config) => {
   const token = useAuthStore.getState().token;
@@ -60,6 +34,21 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
+
+api.interceptors.response.use(
+  (response) => {
+    return response;
+  },
+  async (error) => {
+
+    if (error.response?.status === 401) {
+      useAuthStore.getState().logout();
+      return Promise.reject(error);
+    }
+    
+    return Promise.reject(error);
+  }
+);
 
 export const authAPI = {
   register: (data: RegisterData): Promise<{ data: AuthResponse }> =>
@@ -70,17 +59,17 @@ export const authAPI = {
 };
 
 export const dashboardAPI = {
-  // 📊 Статистика для дашборда
+  // Статистика для дашборда
   getDashboardStats: (): Promise<{
     data: DashboardStats;
   }> => api.get("/dashboard/stats"),
 
-  // 🚀 Проекты пользователя (с фильтрацией по роли)
+  // Проекты пользователя (с фильтрацией по роли)
   getUserProjects: (): Promise<{
     data: Project[];
   }> => api.get("/dashboard/projects"),
 
-  // ✅ Задачи пользователя (с фильтрацией по роли)
+  // Задачи пользователя (с фильтрацией по роли)
   getUserTasks: (params?: {
     status?: TaskStatus[];
     priority?: Priority[];

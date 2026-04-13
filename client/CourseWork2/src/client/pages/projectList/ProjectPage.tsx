@@ -31,7 +31,7 @@ export function ProjectList(): JSX.Element {
 
         {projects.length === 0 && (
           <Card>
-            <Text>Проекты не найдены. Добавьте первый проект!</Text>
+            <Text data-testid='zero-lenght-projects'>Проекты не найдены. Добавьте первый проект!</Text>
           </Card>
         )}
       </Stack>

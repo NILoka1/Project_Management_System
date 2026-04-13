@@ -12,7 +12,7 @@ export const useTeams = () => {
       try {
         const data = (await TeamsAPI.getTeams()).data;
         setTeams(data);
-      } catch (err) {
+      } catch {
         setError('Ошибка загрузки команд');
       } finally {
         setLoading(false);
